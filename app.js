@@ -857,12 +857,7 @@ function renderMiniStats() {
   if (!STATE.statChartType) STATE.statChartType = 'radar';
 
   container.innerHTML = `
-    <div class="chart-toggle-row">
-      <button class="chart-type-btn${STATE.statChartType === 'radar' ? ' active' : ''}" onclick="setStatChart('radar')">◈ RADAR</button>
-      <button class="chart-type-btn${STATE.statChartType === 'bar'   ? ' active' : ''}" onclick="setStatChart('bar')">▦ BAR</button>
-      <button class="chart-type-btn${STATE.statChartType === 'pie'   ? ' active' : ''}" onclick="setStatChart('pie')">◉ PIE</button>
-    </div>
-    <canvas id="statChart" width="320" height="260" style="display:block;margin:0 auto;max-width:100%"></canvas>
+    <canvas id="statChart" style="display:block;margin:0 auto;width:100%;max-width:320px;height:260px"></canvas>
   `;
 
   drawStatChart();
@@ -885,11 +880,24 @@ function drawStatChart() {
   const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
   const accentColor = '#dc1428';
 
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // Fix blur on high-DPI / retina screens
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.offsetWidth || 320;
+  const cssH = canvas.offsetHeight || 260;
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  ctx.scale(dpr, dpr);
 
-  if (type === 'radar') drawRadarChart(ctx, canvas, stats, textColor, gridColor, accentColor, isDark);
-  else if (type === 'bar') drawBarChart(ctx, canvas, stats, textColor, gridColor, isDark);
-  else if (type === 'pie') drawPieChart(ctx, canvas, stats, textColor, isDark);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  // Pass a virtual canvas-like object with CSS dimensions for drawing functions
+  const vCanvas = { width: cssW, height: cssH };
+
+  if (type === 'radar') drawRadarChart(ctx, vCanvas, stats, textColor, gridColor, accentColor, isDark);
+  else if (type === 'bar') drawBarChart(ctx, vCanvas, stats, textColor, gridColor, isDark);
+  else if (type === 'pie') drawPieChart(ctx, vCanvas, stats, textColor, isDark);
 }
 
 function drawRadarChart(ctx, canvas, stats, textColor, gridColor, accentColor, isDark) {
@@ -1368,6 +1376,9 @@ window.showSettings = function() {
     if (sl) sl.value = STATE.hunter.sleep || '23:00';
     if (fi) fi.value = STATE.hunter.fitness || 'beginner';
   }
+  // Sync chart type dropdown with current saved preference
+  const ct = document.getElementById('setting-charttype');
+  if (ct) ct.value = STATE.statChartType || 'radar';
   document.getElementById('settingsPanel').classList.add('open');
   document.getElementById('settingsOverlay').classList.add('open');
 };

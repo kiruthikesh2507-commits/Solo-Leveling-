@@ -605,7 +605,7 @@
     <div class="setting-section-label">STAT CHART</div>
     <div class="setting-item setting-col">
       <label class="setting-field-label">DISPLAY STYLE</label>
-      <select id="setting-charttype" class="setting-input setting-select">
+      <select id="setting-charttype" class="setting-input setting-select" onchange="setStatChart(this.value)">
         <option value="radar">Radar (Spider Web)</option>
         <option value="bar">Bar Chart</option>
         <option value="pie">Pie / Donut</option>
