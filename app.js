@@ -850,13 +850,252 @@ function renderRankTable() {
 }
 
 function renderMiniStats() {
-  const grid = document.getElementById('miniStats');
-  if (!STATE.stats) return;
-  grid.innerHTML = STATS_LIST.map(s => `
-    <div class="mini-stat-item">
-      <span class="mini-stat-name">${STAT_ICONS[s]} ${s}</span>
-      <span class="mini-stat-val">${STATE.stats[s] || 5}</span>
-    </div>`).join('');
+  const container = document.getElementById('miniStats');
+  if (!STATE.stats || !container) return;
+
+  // Ensure chart type preference exists
+  if (!STATE.statChartType) STATE.statChartType = 'radar';
+
+  container.innerHTML = `
+    <div class="chart-toggle-row">
+      <button class="chart-type-btn${STATE.statChartType === 'radar' ? ' active' : ''}" onclick="setStatChart('radar')">◈ RADAR</button>
+      <button class="chart-type-btn${STATE.statChartType === 'bar'   ? ' active' : ''}" onclick="setStatChart('bar')">▦ BAR</button>
+      <button class="chart-type-btn${STATE.statChartType === 'pie'   ? ' active' : ''}" onclick="setStatChart('pie')">◉ PIE</button>
+    </div>
+    <canvas id="statChart" width="320" height="260" style="display:block;margin:0 auto;max-width:100%"></canvas>
+  `;
+
+  drawStatChart();
+}
+
+window.setStatChart = function(type) {
+  STATE.statChartType = type;
+  saveState();
+  renderMiniStats();
+};
+
+function drawStatChart() {
+  const canvas = document.getElementById('statChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const type = STATE.statChartType || 'radar';
+  const stats = STATS_LIST.map(s => ({ name: s, val: STATE.stats[s] || 5, color: STAT_COLORS[s], icon: STAT_ICONS[s] }));
+  const isDark = STATE.theme !== 'light';
+  const textColor = isDark ? '#ccc' : '#333';
+  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+  const accentColor = '#dc1428';
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (type === 'radar') drawRadarChart(ctx, canvas, stats, textColor, gridColor, accentColor, isDark);
+  else if (type === 'bar') drawBarChart(ctx, canvas, stats, textColor, gridColor, isDark);
+  else if (type === 'pie') drawPieChart(ctx, canvas, stats, textColor, isDark);
+}
+
+function drawRadarChart(ctx, canvas, stats, textColor, gridColor, accentColor, isDark) {
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2 - 10;
+  const R = Math.min(W, H) * 0.32;
+  const n = stats.length;
+  const maxVal = Math.max(...stats.map(s => s.val), 20);
+
+  // Draw grid rings
+  [0.25, 0.5, 0.75, 1].forEach(frac => {
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+      const x = cx + Math.cos(angle) * R * frac;
+      const y = cy + Math.sin(angle) * R * frac;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // Draw axes
+  for (let i = 0; i < n; i++) {
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(angle) * R, cy + Math.sin(angle) * R);
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // Draw filled polygon
+  ctx.beginPath();
+  for (let i = 0; i < n; i++) {
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const frac = stats[i].val / maxVal;
+    const x = cx + Math.cos(angle) * R * frac;
+    const y = cy + Math.sin(angle) * R * frac;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fillStyle = isDark ? 'rgba(220,20,40,0.25)' : 'rgba(220,20,40,0.15)';
+  ctx.fill();
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Draw dots & labels
+  for (let i = 0; i < n; i++) {
+    const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
+    const frac = stats[i].val / maxVal;
+    const px = cx + Math.cos(angle) * R * frac;
+    const py = cy + Math.sin(angle) * R * frac;
+
+    ctx.beginPath();
+    ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+    ctx.fillStyle = stats[i].color;
+    ctx.fill();
+
+    // Label
+    const lx = cx + Math.cos(angle) * (R + 18);
+    const ly = cy + Math.sin(angle) * (R + 18);
+    ctx.font = '9px Rajdhani, sans-serif';
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(stats[i].icon + ' ' + stats[i].val, lx, ly);
+  }
+
+  // Stat name legend at bottom
+  ctx.font = '8px Rajdhani, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+  ctx.fillText('[ STAT RADAR ]', cx, H - 8);
+}
+
+function drawBarChart(ctx, canvas, stats, textColor, gridColor, isDark) {
+  const W = canvas.width, H = canvas.height;
+  const padL = 30, padR = 10, padT = 14, padB = 60;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+  const maxVal = Math.max(...stats.map(s => s.val), 20);
+  const barW = chartW / stats.length;
+
+  // Grid lines
+  [0.25, 0.5, 0.75, 1].forEach(frac => {
+    const y = padT + chartH * (1 - frac);
+    ctx.beginPath();
+    ctx.moveTo(padL, y);
+    ctx.lineTo(padL + chartW, y);
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.font = '8px Rajdhani, sans-serif';
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.35)';
+    ctx.textAlign = 'right';
+    ctx.fillText(Math.round(maxVal * frac), padL - 3, y + 3);
+  });
+
+  // Bars
+  stats.forEach((s, i) => {
+    const barH = (s.val / maxVal) * chartH;
+    const x = padL + i * barW + barW * 0.15;
+    const y = padT + chartH - barH;
+    const bw = barW * 0.7;
+
+    // Gradient bar
+    const grad = ctx.createLinearGradient(x, y + barH, x, y);
+    grad.addColorStop(0, s.color + '44');
+    grad.addColorStop(1, s.color);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(x, y, bw, barH, [3, 3, 0, 0]) : ctx.rect(x, y, bw, barH);
+    ctx.fill();
+
+    // Value label above bar
+    ctx.font = 'bold 9px Rajdhani, sans-serif';
+    ctx.fillStyle = s.color;
+    ctx.textAlign = 'center';
+    ctx.fillText(s.val, x + bw / 2, y - 4);
+
+    // Icon below bar
+    ctx.font = '11px serif';
+    ctx.fillStyle = textColor;
+    ctx.fillText(s.icon, x + bw / 2, padT + chartH + 14);
+
+    // Name below icon (abbreviated)
+    ctx.font = '7.5px Rajdhani, sans-serif';
+    ctx.fillStyle = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.5)';
+    ctx.fillText(s.name.substring(0, 3).toUpperCase(), x + bw / 2, padT + chartH + 28);
+  });
+}
+
+function drawPieChart(ctx, canvas, stats, textColor, isDark) {
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2 - 10;
+  const R = Math.min(W, H) * 0.3;
+  const total = stats.reduce((a, s) => a + s.val, 0);
+
+  let startAngle = -Math.PI / 2;
+  stats.forEach((s, i) => {
+    const slice = (s.val / total) * Math.PI * 2;
+    const endAngle = startAngle + slice;
+    const mid = startAngle + slice / 2;
+
+    // Slice
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, R, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = s.color + (isDark ? 'cc' : 'dd');
+    ctx.fill();
+    ctx.strokeStyle = isDark ? '#111' : '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // Label outside for larger slices
+    const pct = (s.val / total * 100).toFixed(0);
+    if (slice > 0.25) {
+      const lx = cx + Math.cos(mid) * (R + 16);
+      const ly = cy + Math.sin(mid) * (R + 16);
+      ctx.font = '9px Rajdhani, sans-serif';
+      ctx.fillStyle = s.color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(s.icon + pct + '%', lx, ly);
+    }
+
+    startAngle = endAngle;
+  });
+
+  // Center hole (donut effect)
+  ctx.beginPath();
+  ctx.arc(cx, cy, R * 0.4, 0, Math.PI * 2);
+  ctx.fillStyle = isDark ? '#1a1a1a' : '#f5f5f5';
+  ctx.fill();
+  ctx.font = 'bold 11px Rajdhani, sans-serif';
+  ctx.fillStyle = textColor;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(total, cx, cy - 6);
+  ctx.font = '8px Rajdhani, sans-serif';
+  ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+  ctx.fillText('TOTAL', cx, cy + 7);
+
+  // Legend at bottom
+  const cols = 3;
+  const legendY = H - 52;
+  const itemW = W / cols;
+  stats.forEach((s, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const lx = col * itemW + itemW * 0.1;
+    const ly = legendY + row * 16;
+    ctx.fillStyle = s.color;
+    ctx.fillRect(lx, ly + 1, 8, 8);
+    ctx.font = '8px Rajdhani, sans-serif';
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(s.name.substring(0,4).toUpperCase() + ' ' + s.val, lx + 11, ly);
+  });
 }
 
 // ─── QUEST RENDERING ──────────────────────────────────────────────────────────

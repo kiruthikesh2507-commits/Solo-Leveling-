@@ -555,18 +555,34 @@ html, body {
 
 /* Mini Stats */
 .mini-stats {
-  display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem;
+  display: flex; flex-direction: column; gap: 0.5rem;
 }
-.mini-stat-item {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 0.5rem 0.75rem;
+.chart-toggle-row {
+  display: flex; gap: 0.5rem; justify-content: center;
+  margin-bottom: 0.75rem;
+}
+.chart-type-btn {
+  flex: 1;
+  padding: 0.45rem 0.5rem;
   background: var(--bg-secondary);
-  border: 1px solid var(--border); border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-family: var(--font-main);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s;
 }
-.mini-stat-name { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); }
-.mini-stat-val {
-  font-family: 'Orbitron', sans-serif; font-size: 0.9rem; font-weight: 700;
+.chart-type-btn:hover {
+  border-color: var(--accent);
   color: var(--accent);
+}
+.chart-type-btn.active {
+  background: rgba(220, 20, 40, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
 }
 
 /* Generate Button */
