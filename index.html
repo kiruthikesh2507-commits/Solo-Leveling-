@@ -293,6 +293,9 @@
     <button class="nav-btn" data-tab="stats" onclick="switchTab('stats')">
       <span class="nav-icon">◐</span><span class="nav-label">STATS</span>
     </button>
+    <button class="nav-btn" data-tab="achievements" onclick="switchTab('achievements')">
+      <span class="nav-icon">⬡</span><span class="nav-label">BADGES</span>
+    </button>
   </nav>
 
   <!-- TAB: DASHBOARD -->
@@ -446,10 +449,85 @@
       <div class="rank-table" id="rankTable"></div>
     </div>
   </div>
-</div>
+
+
+  <!-- TAB: ACHIEVEMENTS -->
+  <div class="tab-content" id="tab-achievements">
+    <div class="scroll-area">
+      <div class="achievements-header">
+        <div class="section-label">HUNTER ACHIEVEMENTS</div>
+        <div class="ach-summary">
+          <span id="achUnlocked">0</span> / <span id="achTotal">0</span> UNLOCKED
+        </div>
+      </div>
+      <div class="ach-tier-filters">
+        <button class="ach-filter active" data-tier="all" onclick="filterAchievements('all')">ALL</button>
+        <button class="ach-filter bronze" data-tier="bronze" onclick="filterAchievements('bronze')">BRONZE</button>
+        <button class="ach-filter silver" data-tier="silver" onclick="filterAchievements('silver')">SILVER</button>
+        <button class="ach-filter gold" data-tier="gold" onclick="filterAchievements('gold')">GOLD</button>
+        <button class="ach-filter platinum" data-tier="platinum" onclick="filterAchievements('platinum')">PLAT</button>
+        <button class="ach-filter diamond" data-tier="diamond" onclick="filterAchievements('diamond')">DIAMOND</button>
+      </div>
+      <div id="achievementsList" class="achievements-list"></div>
+    </div>
+  </div>
+
+</div><!-- end screen-app -->
 
 <!-- MODALS -->
 <div id="modalOverlay" class="modal-overlay" onclick="closeModal()"></div>
+
+<!-- ═══ DUNGEON GATE MODAL ═══ -->
+<div id="dungeonGateOverlay" class="dungeon-overlay">
+  <div class="dungeon-gate-modal">
+    <div class="gate-scanlines"></div>
+    <div class="gate-particles" id="gateParticles"></div>
+    <div class="gate-header">
+      <div class="gate-alert-text">[ SYSTEM ALERT ]</div>
+      <div class="gate-title">A GATE HAS APPEARED</div>
+      <div class="gate-subtitle">— DIMENSIONAL RIFT DETECTED —</div>
+    </div>
+    <div class="gate-portal">
+      <div class="gate-ring gate-ring-1"></div>
+      <div class="gate-ring gate-ring-2"></div>
+      <div class="gate-ring gate-ring-3"></div>
+      <div class="gate-core">⬡</div>
+    </div>
+    <div class="gate-quest-info">
+      <div class="gate-quest-rank" id="gateQuestRank">A-CLASS DUNGEON</div>
+      <div class="gate-quest-name" id="gateQuestName">???</div>
+      <div class="gate-quest-desc" id="gateQuestDesc">???</div>
+      <div class="gate-quest-rewards">
+        <div class="gate-reward-item"><span class="gate-reward-label">RP REWARD</span><span class="gate-reward-val" id="gateRP">+500</span></div>
+        <div class="gate-reward-item"><span class="gate-reward-label">STAT BONUS</span><span class="gate-reward-val" id="gateStat">+10</span></div>
+      </div>
+    </div>
+    <div class="gate-timer-area">
+      <div class="gate-timer-label">TIME REMAINING TO DECIDE</div>
+      <div class="gate-timer-display" id="gateTimerDisplay">30</div>
+      <div class="gate-timer-track"><div class="gate-timer-bar" id="gateTimerBar"></div></div>
+    </div>
+    <div class="gate-warning">⚠ DECLINING WILL TRIGGER SYSTEM PUNISHMENT</div>
+    <div class="gate-actions">
+      <button class="gate-btn-accept" onclick="acceptDungeonQuest()">⚔ ENTER DUNGEON</button>
+      <button class="gate-btn-decline" onclick="declineDungeonQuest()">✕ RETREAT</button>
+    </div>
+  </div>
+</div>
+
+<!-- Achievement Unlock Modal -->
+<div id="modalAchievement" class="modal ach-modal">
+  <div class="ach-unlock-glow"></div>
+  <div class="modal-header">[ ACHIEVEMENT UNLOCKED ]</div>
+  <div class="ach-unlock-badge" id="achUnlockBadge"></div>
+  <div class="ach-unlock-tier" id="achUnlockTier"></div>
+  <div class="ach-unlock-name" id="achUnlockName"></div>
+  <div class="ach-unlock-desc" id="achUnlockDesc"></div>
+  <div class="modal-rewards">
+    <div class="reward-row"><span class="reward-label">BONUS RP</span><span class="reward-val" id="achUnlockRP">+0</span></div>
+  </div>
+  <button class="btn-primary" onclick="closeModal()">ACKNOWLEDGED</button>
+</div>
 
 <!-- Quest Complete Modal -->
 <div id="modalQuestComplete" class="modal">
@@ -511,5 +589,6 @@
 <!-- Load quest database FIRST, then app logic -->
 <script src="quests.js"></script>
 <script src="app.js"></script>
+<script src="features.js"></script>
 </body>
 </html>
