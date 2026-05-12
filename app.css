@@ -422,7 +422,15 @@ html, body {
   box-shadow: 0 0 8px var(--accent);
 }
 .nav-icon { font-size: 1.1rem; }
-.nav-label { font-family: 'Share Tech Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; }
+.nav-label { font-family: 'Share Tech Mono', monospace; font-size: 0.5rem; letter-spacing: 0.06em; }
+@media (max-width: 380px) {
+  .nav-label { font-size: 0.42rem; letter-spacing: 0.02em; }
+  .nav-btn { gap: 2px; }
+}
+@media (max-width: 320px) {
+  .nav-label { display: none; }
+  .nav-icon { font-size: 1.2rem; }
+}
 
 /* Scroll area */
 .scroll-area {
@@ -661,12 +669,6 @@ html, body {
   border-color: var(--success);
   opacity: 0.7;
 }
-.quest-card.completed::after {
-  content: '✓ COMPLETE';
-  position: absolute; top: 0.75rem; right: 0.75rem;
-  font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
-  color: var(--success); letter-spacing: 0.1em;
-}
 .quest-card.challenging { border-color: var(--gold); }
 .quest-card.special { border-color: var(--purple); }
 
@@ -698,6 +700,11 @@ html, body {
 }
 .qr-rp { color: var(--gold); }
 .qr-stat { color: var(--success); }
+.qr-complete-badge {
+  font-family: 'Share Tech Mono', monospace; font-size: 0.6rem;
+  color: var(--success); letter-spacing: 0.1em;
+  align-self: center;
+}
 
 .quest-name {
   font-family: 'Rajdhani', sans-serif; font-size: 1.05rem;
@@ -965,6 +972,28 @@ html, body {
   font-size: 0.9rem;
 }
 .setting-val { font-family: 'Orbitron', sans-serif; font-size: 0.75rem; color: var(--accent); }
+
+.setting-section-label {
+  font-family: 'Orbitron', sans-serif; font-size: 0.55rem;
+  letter-spacing: 0.15em; color: var(--accent);
+  padding: 0.25rem 0 0.1rem;
+  border-bottom: 1px solid var(--border);
+  margin-top: 0.25rem;
+}
+.setting-col {
+  flex-direction: column; align-items: flex-start; gap: 0.35rem;
+}
+.setting-field-label {
+  font-family: 'Orbitron', sans-serif; font-size: 0.5rem;
+  letter-spacing: 0.1em; color: var(--text-dim);
+}
+.setting-input {
+  width: 100%; background: var(--bg-secondary);
+  border: 1px solid var(--border); border-radius: 4px;
+  color: var(--text-primary); padding: 0.4rem 0.6rem;
+  font-family: 'Rajdhani', sans-serif; font-size: 0.9rem;
+}
+.setting-select { appearance: none; cursor: pointer; }
 
 /* ─── NOTIFICATION TOAST ─── */
 .toast {

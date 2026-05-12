@@ -61,7 +61,7 @@ const SHOP_ITEMS = [
   { id:'double_rp',       name:'Double Rewards Pass',    icon:'💎', effect:'Double all RP earned for one day',                        cost:1500 },
   { id:'bonus_chest_key', name:'Bonus Chest Key',        icon:'🗝', effect:'Guarantee a Bonus Chest after completing daily quests',    cost:1600 },
   { id:'mystery_token',   name:'Mystery Reward Token',   icon:'❓', effect:'Exchange for a random special reward',                    cost:1200 },
-  { id:'rp_multiplier',   name:'RP Multiplier',          icon:'📈', effect:'Double RP earnings for one day',                         cost:1700 },
+  { id:'rp_multiplier',   name:'Stat Surge Token',       icon:'📈', effect:'Instantly gain +2 to every stat (one-time use)',         cost:1700 },
 ];
 
 const CHEST_REWARDS = [
@@ -218,6 +218,7 @@ function showApp() {
   renderRankTable();
   // Feature: check achievements on load
   if (typeof checkAchievements === 'function') setTimeout(checkAchievements, 200);
+  if (typeof renderAchievements === 'function') setTimeout(renderAchievements, 300);
 }
 
 function showOnboarding() {
@@ -740,8 +741,10 @@ window.useItem = function(itemId) {
     case 'cheat_day':
     case 'skip_day':      skipAllQuests(); break;
     case 'half_day':      activateHalfDay(); break;
-    case 'double_rp':
-    case 'rp_multiplier': STATE.activeEffects.doubleRewards = true; showToast('DOUBLE RP ACTIVATED'); break;
+    case 'double_rp':     STATE.activeEffects.doubleRewards = true; showToast('DOUBLE RP ACTIVATED'); break;
+    case 'rp_multiplier':
+      STATS_LIST.forEach(s => { STATE.stats[s] = (STATE.stats[s] || 5) + 2; });
+      renderStats(); showToast('+2 TO ALL STATS!', 'success'); break;
     case 'hard_work':     STATE.activeEffects.doubleRewards = true; showToast('HARD WORK MODE: 2X REWARDS'); break;
     case 'task_booster':  STATE.activeEffects.taskBooster = true; showToast('TASK BOOSTER READY'); break;
     case 'bonus_chest_key': STATE.activeEffects.guaranteeChest = true; showToast('NEXT QUEST GUARANTEES A CHEST', 'gold'); break;
@@ -888,15 +891,15 @@ function renderQuests() {
 function questCard(q) {
   const statColor = STAT_COLORS[q.stat] || 'var(--accent)';
   const muscleTag = q.muscle && q.muscle !== 'lifestyle' ? `<span class="muscle-tag">${MUSCLE_LABELS[q.muscle] || q.muscle}</span>` : '';
+  const rewardsOrStatus = q.completed
+    ? `<span class="qr-complete-badge">${q.skipped ? '— SKIPPED' : '✓ DONE'}</span>`
+    : `<div class="quest-rewards-mini"><span class="qr-rp">◆ ${q.rp} RP</span><span class="qr-stat">+${q.statGain} ${q.stat}</span></div>`;
   return `
     <div class="quest-card ${q.completed ? 'completed' : ''} ${q.type === 'challenging' ? 'challenging' : ''} ${q.type === 'special' ? 'special' : ''}">
       <div class="quest-type-bar ${q.type}"></div>
       <div class="quest-header-row">
         <span class="quest-type-badge ${q.type}">${q.type.toUpperCase()}</span>
-        <div class="quest-rewards-mini">
-          <span class="qr-rp">◆ ${q.rp} RP</span>
-          <span class="qr-stat">+${q.statGain} ${q.stat}</span>
-        </div>
+        ${rewardsOrStatus}
       </div>
       <div class="quest-name">${q.name}</div>
       <div class="quest-desc">${q.description}</div>
@@ -1046,13 +1049,25 @@ function checkDailyReset() {
   const today = getTodayStr();
   if (STATE.lastQuestDate && STATE.lastQuestDate !== today) {
     const completedYesterday = STATE.quests.filter(q => q.completed && !q.skipped).length > 0;
-    if (completedYesterday) { STATE.streak++; STATE.penaltyDays = 0; }
-    else { STATE.penaltyDays++; }
+    if (completedYesterday) {
+      STATE.streak++;
+      STATE.penaltyDays = 0;
+      if (!STATE.hunter.noSkipStreak) STATE.hunter.noSkipStreak = 0;
+      const allDone = STATE.quests.filter(q => !q.skipped).every(q => q.completed);
+      if (allDone) STATE.hunter.noSkipStreak++;
+      else STATE.hunter.noSkipStreak = 0;
+    } else {
+      STATE.streak = 0;
+      STATE.penaltyDays++;
+      if (STATE.hunter) STATE.hunter.noSkipStreak = 0;
+    }
     STATE.rpTodayEarned = 0;
     STATE.statsTodayGained = 0;
     STATE.questsCompleted = 0;
+    STATE.quests = [];
     saveState();
   }
+  checkPenalty();
 }
 
 function checkPenalty() {
@@ -1102,8 +1117,68 @@ window.closeModal = function() {
 
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
 
-window.showSettings = function() { document.getElementById('settingsPanel').classList.add('open'); };
+window.showSettings = function() {
+  // Populate current values
+  if (STATE.hunter) {
+    const wu = document.getElementById('setting-wakeup');
+    const sl = document.getElementById('setting-sleep');
+    const fi = document.getElementById('setting-fitness');
+    if (wu) wu.value = STATE.hunter.wakeup || '07:00';
+    if (sl) sl.value = STATE.hunter.sleep || '23:00';
+    if (fi) fi.value = STATE.hunter.fitness || 'beginner';
+  }
+  document.getElementById('settingsPanel').classList.add('open');
+};
 window.hideSettings = function() { document.getElementById('settingsPanel').classList.remove('open'); };
+
+window.saveProfileSettings = function() {
+  if (!STATE.hunter) return;
+  const wu = document.getElementById('setting-wakeup');
+  const sl = document.getElementById('setting-sleep');
+  const fi = document.getElementById('setting-fitness');
+  if (wu && wu.value) STATE.hunter.wakeup = wu.value;
+  if (sl && sl.value) STATE.hunter.sleep = sl.value;
+  if (fi && fi.value) STATE.hunter.fitness = fi.value;
+  saveState();
+  showToast('PROFILE UPDATED', 'success');
+};
+
+window.exportData = function() {
+  try {
+    const blob = new Blob([JSON.stringify(STATE, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'solo-leveling-backup-' + getTodayStr() + '.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('DATA EXPORTED', 'success');
+  } catch(e) { showToast('EXPORT FAILED', 'error'); }
+};
+
+window.importData = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!imported.hunter) { showToast('INVALID BACKUP FILE', 'error'); return; }
+      if (!confirm('Import this backup? Current progress will be replaced.')) return;
+      STATE = { ...STATE, ...imported };
+      saveState();
+      syncUI();
+      renderShop();
+      renderStats();
+      renderRankTable();
+      if (typeof renderAchievements === 'function') renderAchievements();
+      showToast('DATA IMPORTED ✓', 'success');
+      hideSettings();
+    } catch(err) { showToast('IMPORT FAILED: CORRUPTED FILE', 'error'); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+};
 
 window.confirmReset = function() {
   if (confirm('RESET ALL PROGRESS? This cannot be undone.')) {

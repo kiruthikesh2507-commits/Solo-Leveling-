@@ -579,7 +579,36 @@
       <span>Hunter Name</span>
       <span id="settingName" class="setting-val"></span>
     </div>
-    <div class="setting-item">
+
+    <!-- Profile Edit Section -->
+    <div class="setting-section-label">EDIT PROFILE</div>
+    <div class="setting-item setting-col">
+      <label class="setting-field-label">WAKE-UP TIME</label>
+      <input type="time" id="setting-wakeup" class="setting-input" />
+    </div>
+    <div class="setting-item setting-col">
+      <label class="setting-field-label">SLEEP TIME</label>
+      <input type="time" id="setting-sleep" class="setting-input" />
+    </div>
+    <div class="setting-item setting-col">
+      <label class="setting-field-label">FITNESS LEVEL</label>
+      <select id="setting-fitness" class="setting-input setting-select">
+        <option value="beginner">Beginner</option>
+        <option value="intermediate">Intermediate</option>
+        <option value="advanced">Advanced</option>
+      </select>
+    </div>
+    <button class="btn-ghost small" style="margin-top:0.25rem" onclick="saveProfileSettings()">SAVE PROFILE</button>
+
+    <!-- Data Export / Import -->
+    <div class="setting-section-label">DATA BACKUP</div>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn-ghost small" style="flex:1" onclick="exportData()">⬇ EXPORT</button>
+      <button class="btn-ghost small" style="flex:1" onclick="document.getElementById('importFile').click()">⬆ IMPORT</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" />
+    </div>
+
+    <div class="setting-item" style="margin-top:auto">
       <span>Reset Progress</span>
       <button class="btn-danger small" onclick="confirmReset()">RESET</button>
     </div>

@@ -357,8 +357,8 @@ window.renderAchievements = function() {
         <div class="ach-card-icon">${ach.icon}</div>
         <div class="ach-card-tier-badge">${tierData.label}</div>
         <div class="ach-card-name">${ach.name}</div>
-        <div class="ach-card-desc">${isUnlocked ? ach.desc : '???'}</div>
-        <div class="ach-card-rp">◆ ${isUnlocked ? '+' + tierData.rp + ' RP' : '? RP'}</div>
+        <div class="ach-card-desc">${ach.desc}</div>
+        <div class="ach-card-rp">◆ ${isUnlocked ? '+' + tierData.rp + ' RP' : tierData.rp + ' RP'}</div>
       </div>`;
   }).join('');
 };
