@@ -216,6 +216,8 @@ function showApp() {
   renderShop();
   renderStats();
   renderRankTable();
+  // Feature: check achievements on load
+  if (typeof checkAchievements === 'function') setTimeout(checkAchievements, 200);
 }
 
 function showOnboarding() {
@@ -586,10 +588,11 @@ window.switchTab = function(tab) {
   const nb = document.querySelector(`.nav-btn[data-tab="${tab}"]`);
   if (tc) tc.classList.add('active');
   if (nb) nb.classList.add('active');
-  if (tab === 'stats')     { renderStats(); renderRankTable(); }
-  if (tab === 'shop')      { renderShop(); }
-  if (tab === 'inventory') { renderInventory(); }
-  if (tab === 'quests')    { renderQuests(); }
+  if (tab === 'stats')        { renderStats(); renderRankTable(); }
+  if (tab === 'shop')         { renderShop(); }
+  if (tab === 'inventory')    { renderInventory(); }
+  if (tab === 'quests')       { renderQuests(); }
+  if (tab === 'achievements') { if (typeof renderAchievements === 'function') renderAchievements(); }
 };
 
 // ─── QUEST GENERATION (LOCAL) ─────────────────────────────────────────────────
