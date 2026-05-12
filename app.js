@@ -1,10 +1,11 @@
 /* ═══════════════════════════════════════════
    SOLO LEVELING SYSTEM — APPLICATION LOGIC
+   v2.0 — Local Quest Engine (No API Required)
    ═══════════════════════════════════════════ */
 
 'use strict';
 
-// ─── CONSTANTS ───────────────────────────────────────────────────────────────
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
 const RANKS = [
   { name: 'E-Rank',    short: 'E',   min: 55,   max: 119  },
@@ -38,41 +39,105 @@ const STAT_COLORS = {
 };
 
 const SHOP_ITEMS = [
-  { id:'cheat_day', name:'Cheat Day Pass', icon:'🎫', effect:'Skip all quests for one day without penalties', cost:1000 },
-  { id:'skip_quest', name:'Skip a Quest', icon:'⏭', effect:'Skip one daily quest without penalties', cost:350 },
-  { id:'skip_day', name:'Skip a Day', icon:'📅', effect:'Skip an entire day without penalties', cost:1200 },
-  { id:'half_day', name:'Half-Day Break', icon:'🌓', effect:'Complete only 4 daily quests instead of 8', cost:500 },
-  { id:'second_chance', name:'Second Chance', icon:'🔄', effect:'Retry a failed quest without penalties', cost:600 },
-  { id:'auto_complete', name:'Auto-Complete', icon:'⚡', effect:'Instantly complete one daily quest', cost:900 },
-  { id:'rest_bonus', name:'Rest Bonus', icon:'💤', effect:'Take a full day off but gain 50% rewards', cost:950 },
-  { id:'quest_delay', name:'Quest Delay', icon:'⏱', effect:'Postpone a quest until the next day', cost:400 },
-  { id:'hard_work', name:'Hard Work Pass', icon:'🔥', effect:'Double quest rewards for one day', cost:1400 },
-  { id:'swap_quest', name:'Swap Quest', icon:'🔁', effect:'Swap one daily quest for another', cost:300 },
-  { id:'sp_skipper', name:'Special Quest Skipper', icon:'🎭', effect:'Skip a special quest without penalties', cost:1000 },
-  { id:'easier_day', name:'Easier Day', icon:'🌤', effect:'Reduce difficulty of all quests for one day', cost:850 },
-  { id:'lucky_pass', name:'Lucky Pass', icon:'🍀', effect:'Skip one random quest but earn 50% rewards', cost:700 },
-  { id:'penalty_shield', name:'Penalty Shield', icon:'🛡', effect:'Prevent penalties from one failed quest', cost:1100 },
-  { id:'task_booster', name:'Task Booster', icon:'✨', effect:'Double rewards of a single completed quest', cost:800 },
-  { id:'overdrive', name:'Overdrive Mode', icon:'💥', effect:'Triple rewards for one day but with harder quests', cost:1800 },
-  { id:'refresh_quests', name:'Refresh Quests', icon:'🔃', effect:'Reroll all daily quests once per day', cost:650 },
-  { id:'reduced_effort', name:'Reduced Effort Pass', icon:'😌', effect:'Halve effort required for all quests today', cost:900 },
-  { id:'sleep_in', name:'Sleep-In Pass', icon:'🌙', effect:'Start quests later without penalty', cost:250 },
-  { id:'double_rp', name:'Double Rewards Pass', icon:'💎', effect:'Double all RP earned for one day', cost:1500 },
-  { id:'bonus_chest_key', name:'Bonus Chest Key', icon:'🗝', effect:'Guarantee a Bonus Chest after completing daily quests', cost:1600 },
-  { id:'mystery_token', name:'Mystery Reward Token', icon:'❓', effect:'Exchange for a random special reward', cost:1200 },
-  { id:'rp_multiplier', name:'RP Multiplier', icon:'📈', effect:'Double RP earnings for one day', cost:1700 },
+  { id:'cheat_day',       name:'Cheat Day Pass',         icon:'🎫', effect:'Skip all quests for one day without penalties',              cost:1000 },
+  { id:'skip_quest',      name:'Skip a Quest',           icon:'⏭', effect:'Skip one daily quest without penalties',                     cost:350  },
+  { id:'skip_day',        name:'Skip a Day',             icon:'📅', effect:'Skip an entire day without penalties',                      cost:1200 },
+  { id:'half_day',        name:'Half-Day Break',         icon:'🌓', effect:'Complete only 4 daily quests instead of 8',                 cost:500  },
+  { id:'second_chance',   name:'Second Chance',          icon:'🔄', effect:'Retry a failed quest without penalties',                    cost:600  },
+  { id:'auto_complete',   name:'Auto-Complete',          icon:'⚡', effect:'Instantly complete one daily quest',                        cost:900  },
+  { id:'rest_bonus',      name:'Rest Bonus',             icon:'💤', effect:'Take a full day off but gain 50% rewards',                  cost:950  },
+  { id:'quest_delay',     name:'Quest Delay',            icon:'⏱', effect:'Postpone a quest until the next day',                       cost:400  },
+  { id:'hard_work',       name:'Hard Work Pass',         icon:'🔥', effect:'Double quest rewards for one day',                         cost:1400 },
+  { id:'swap_quest',      name:'Swap Quest',             icon:'🔁', effect:'Swap one daily quest for another',                         cost:300  },
+  { id:'sp_skipper',      name:'Special Quest Skipper',  icon:'🎭', effect:'Skip a special quest without penalties',                    cost:1000 },
+  { id:'easier_day',      name:'Easier Day',             icon:'🌤', effect:'Reduce difficulty of all quests for one day',              cost:850  },
+  { id:'lucky_pass',      name:'Lucky Pass',             icon:'🍀', effect:'Skip one random quest but earn 50% rewards',               cost:700  },
+  { id:'penalty_shield',  name:'Penalty Shield',         icon:'🛡', effect:'Prevent penalties from one failed quest',                  cost:1100 },
+  { id:'task_booster',    name:'Task Booster',           icon:'✨', effect:'Double rewards of a single completed quest',               cost:800  },
+  { id:'overdrive',       name:'Overdrive Mode',         icon:'💥', effect:'Triple rewards for one day but with harder quests',        cost:1800 },
+  { id:'refresh_quests',  name:'Refresh Quests',         icon:'🔃', effect:'Reroll all daily quests once per day',                    cost:650  },
+  { id:'reduced_effort',  name:'Reduced Effort Pass',    icon:'😌', effect:'Halve effort required for all quests today',              cost:900  },
+  { id:'sleep_in',        name:'Sleep-In Pass',          icon:'🌙', effect:'Start quests later without penalty',                      cost:250  },
+  { id:'double_rp',       name:'Double Rewards Pass',    icon:'💎', effect:'Double all RP earned for one day',                        cost:1500 },
+  { id:'bonus_chest_key', name:'Bonus Chest Key',        icon:'🗝', effect:'Guarantee a Bonus Chest after completing daily quests',    cost:1600 },
+  { id:'mystery_token',   name:'Mystery Reward Token',   icon:'❓', effect:'Exchange for a random special reward',                    cost:1200 },
+  { id:'rp_multiplier',   name:'RP Multiplier',          icon:'📈', effect:'Double RP earnings for one day',                         cost:1700 },
 ];
 
 const CHEST_REWARDS = [
-  { name:'RP Windfall', value:'+100 RP', type:'rp', amount:100 },
-  { name:'RP Jackpot', value:'+250 RP', type:'rp', amount:250 },
-  { name:'Stat Surge', value:'+3 to a random stat', type:'stat', amount:3 },
-  { name:'Double Surge', value:'+5 to two random stats', type:'multi_stat', amount:5 },
-  { name:'Temporary Multiplier', value:'2x RP next quest', type:'buff' },
-  { name:'Quest Skip Token', value:'Skip 1 quest free', type:'item', itemId:'skip_quest' },
-  { name:'Mystery Reward', value:'Surprise incoming', type:'mystery' },
-  { name:'Bonus RP', value:'+75 RP', type:'rp', amount:75 },
+  { name:'RP Windfall',          value:'+100 RP',                   type:'rp',         amount:100 },
+  { name:'RP Jackpot',           value:'+250 RP',                   type:'rp',         amount:250 },
+  { name:'Stat Surge',           value:'+3 to a random stat',       type:'stat',       amount:3   },
+  { name:'Double Surge',         value:'+5 to two random stats',    type:'multi_stat', amount:5   },
+  { name:'Temporary Multiplier', value:'2x RP next quest',          type:'buff'                   },
+  { name:'Quest Skip Token',     value:'Skip 1 quest free',         type:'item',       itemId:'skip_quest' },
+  { name:'Mystery Reward',       value:'Surprise incoming',         type:'mystery'                },
+  { name:'Bonus RP',             value:'+75 RP',                    type:'rp',         amount:75  },
 ];
+
+// ─── WORKOUT SPLIT DEFINITIONS ────────────────────────────────────────────────
+
+const SPLITS = {
+  ppl: {
+    label: 'PPL (Push / Pull / Legs)',
+    defaultDays: 6,
+    cycle: [
+      { label: 'Push Day',  muscles: ['chest','shoulders','triceps'] },
+      { label: 'Pull Day',  muscles: ['back','biceps','forearms']    },
+      { label: 'Leg Day',   muscles: ['quads','hamstrings','glutes','calves'] },
+      { label: 'Push Day',  muscles: ['chest','shoulders','triceps'] },
+      { label: 'Pull Day',  muscles: ['back','biceps','forearms']    },
+      { label: 'Leg Day',   muscles: ['quads','hamstrings','glutes','calves'] },
+    ],
+  },
+  brosplit: {
+    label: 'Bro Split',
+    defaultDays: 5,
+    cycle: [
+      { label: 'Chest Day',        muscles: ['chest']               },
+      { label: 'Back Day',         muscles: ['back']                },
+      { label: 'Shoulder Day',     muscles: ['shoulders']           },
+      { label: 'Arms Day',         muscles: ['biceps','triceps','forearms'] },
+      { label: 'Leg Day',          muscles: ['quads','hamstrings','glutes','calves'] },
+    ],
+  },
+  upperlower: {
+    label: 'Upper / Lower',
+    defaultDays: 4,
+    cycle: [
+      { label: 'Upper Body', muscles: ['chest','back','shoulders'] },
+      { label: 'Lower Body', muscles: ['quads','hamstrings','glutes','calves'] },
+      { label: 'Upper Body', muscles: ['chest','back','shoulders'] },
+      { label: 'Lower Body', muscles: ['quads','hamstrings','glutes','calves'] },
+    ],
+  },
+  fullbody: {
+    label: 'Full Body',
+    defaultDays: 3,
+    cycle: [
+      { label: 'Full Body A', muscles: ['fullbody'] },
+      { label: 'Full Body B', muscles: ['fullbody'] },
+      { label: 'Full Body C', muscles: ['fullbody'] },
+    ],
+  },
+  apphandle: {
+    label: 'Let App Decide',
+    defaultDays: 5,
+    cycle: [
+      { label: 'Chest & Triceps', muscles: ['chest','triceps']    },
+      { label: 'Back & Biceps',   muscles: ['back','biceps']      },
+      { label: 'Leg Day',         muscles: ['quads','hamstrings','glutes'] },
+      { label: 'Shoulder & Core', muscles: ['shoulders','core']   },
+      { label: 'Full Body',       muscles: ['fullbody']           },
+    ],
+  },
+};
+
+const MUSCLE_LABELS = {
+  chest:'Chest', back:'Back', shoulders:'Shoulders', biceps:'Biceps',
+  triceps:'Triceps', forearms:'Forearms', quads:'Quads', hamstrings:'Hamstrings',
+  glutes:'Glutes', calves:'Calves', core:'Core / Abs', fullbody:'Full Body'
+};
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 
@@ -120,11 +185,10 @@ function runBootSequence(callback) {
   const status = document.getElementById('bootStatus');
   const msgs = [
     'INITIALIZING SYSTEM...', 'LOADING HUNTER DATABASE...',
-    'CALIBRATING QUEST ENGINE...', 'CONNECTING TO THE SYSTEM...',
+    'CALIBRATING QUEST ENGINE...', 'LOADING 10,000 MISSIONS...',
     'RANK ASSESSMENT LOADING...', 'SYSTEM READY.'
   ];
-  let progress = 0;
-  let msgIdx = 0;
+  let progress = 0; let msgIdx = 0;
   const interval = setInterval(() => {
     progress += Math.random() * 18 + 5;
     if (progress >= 100) { progress = 100; clearInterval(interval); }
@@ -146,7 +210,6 @@ function showScreen(name) {
 
 function showApp() {
   showScreen('app');
-  document.getElementById('screen-app').classList.add('active');
   syncUI();
   checkDailyReset();
   checkPenalty();
@@ -158,13 +221,18 @@ function showApp() {
 function showOnboarding() {
   showScreen('onboarding');
   currentStep = 1;
+  totalSteps = 6;
   renderOnboardingStep(1);
+  injectWorkoutSteps();
 }
 
 // ─── ONBOARDING ───────────────────────────────────────────────────────────────
 
 let currentStep = 1;
+let totalSteps = 6;
 let selectedTheme = 'dark';
+let selectedSplit = '';
+let customSchedule = {}; // { Mon: [muscles], Tue: [muscles], ... }
 
 window.selectTheme = function(theme) {
   selectedTheme = theme;
@@ -174,42 +242,227 @@ window.selectTheme = function(theme) {
   applyTheme(theme);
 };
 
+// Inject the two new onboarding steps (4a: workout setup, 4b: day assignment)
+function injectWorkoutSteps() {
+  const container = document.querySelector('.onboard-container');
+  const nav = container.querySelector('.onboard-nav');
+
+  // Update step indicator to 6 steps
+  const stepsIndicator = container.querySelector('.steps-indicator');
+  stepsIndicator.innerHTML = '';
+  for (let i = 1; i <= 6; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'step-dot' + (i === 1 ? ' active' : '');
+    dot.dataset.step = i;
+    stepsIndicator.appendChild(dot);
+    if (i < 6) {
+      const line = document.createElement('div');
+      line.className = 'step-line';
+      stepsIndicator.appendChild(line);
+    }
+  }
+
+  // Re-number existing steps 1-3 and 4 becomes 5, 6
+  document.querySelectorAll('.onboard-step').forEach(s => {
+    const n = parseInt(s.dataset.step);
+    if (n >= 4) s.dataset.step = n + 2; // shift confirmation to step 6
+  });
+
+  // Step 4: Workout Environment + Split
+  const step4 = document.createElement('div');
+  step4.className = 'onboard-step';
+  step4.dataset.step = '4';
+  step4.innerHTML = `
+    <div class="step-label">STEP 04 / WORKOUT SETUP</div>
+
+    <div class="form-group">
+      <label class="form-label">WHERE DO YOU PRIMARILY TRAIN?</label>
+      <div class="radio-group">
+        <label class="radio-item">
+          <input type="radio" name="workoutEnv" value="gym" />
+          <span>🏋️ Gym — Access to all equipment</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="workoutEnv" value="calisthenics" />
+          <span>🤸 Outdoors / Calisthenics — Bars, bodyweight, parks</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="workoutEnv" value="home" />
+          <span>🏠 Home — No equipment</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">WORKOUT SPLIT</label>
+      <div class="radio-group" id="splitOptions">
+        <label class="radio-item">
+          <input type="radio" name="workoutSplit" value="ppl" onchange="onSplitChange(this.value)" />
+          <span>PPL — Push / Pull / Legs (6 days)</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="workoutSplit" value="brosplit" onchange="onSplitChange(this.value)" />
+          <span>Bro Split — One muscle per day (5 days)</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="workoutSplit" value="upperlower" onchange="onSplitChange(this.value)" />
+          <span>Upper / Lower (4 days)</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="workoutSplit" value="fullbody" onchange="onSplitChange(this.value)" />
+          <span>Full Body (3 days)</span>
+        </label>
+        <label class="radio-item">
+          <input type="radio" name="workoutSplit" value="apphandle" onchange="onSplitChange(this.value)" />
+          <span>Let the App Decide (5 days)</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group" id="daysPerWeekGroup" style="display:none">
+      <label class="form-label">WORKOUT DAYS PER WEEK</label>
+      <div class="radio-group days-row">
+        ${[3,4,5,6,7].map(d => `
+          <label class="radio-item-inline">
+            <input type="radio" name="daysPerWeek" value="${d}" />
+            <span>${d} days</span>
+          </label>`).join('')}
+      </div>
+    </div>
+  `;
+
+  // Step 5: Day-by-day muscle assignment
+  const step5 = document.createElement('div');
+  step5.className = 'onboard-step';
+  step5.dataset.step = '5';
+  step5.innerHTML = `
+    <div class="step-label">STEP 05 / TRAINING SCHEDULE</div>
+    <div class="schedule-info">Assign your muscles to each day. Leave a day blank for rest.</div>
+    <div id="dayAssignmentGrid" class="day-assignment-grid"></div>
+  `;
+
+  // Insert before step 5 (old step 4 = now step 6)
+  const step6 = document.querySelector('.onboard-step[data-step="6"]');
+  container.insertBefore(step4, nav);
+  container.insertBefore(step5, nav);
+
+  // Move step 6 to correct position
+  container.insertBefore(step6, nav);
+}
+
+window.onSplitChange = function(splitVal) {
+  selectedSplit = splitVal;
+  const daysGroup = document.getElementById('daysPerWeekGroup');
+  daysGroup.style.display = 'block';
+
+  // Pre-select default days for this split
+  const def = SPLITS[splitVal]?.defaultDays || 5;
+  document.querySelectorAll('input[name="daysPerWeek"]').forEach(r => {
+    r.checked = parseInt(r.value) === def;
+  });
+};
+
+function buildDayAssignmentGrid() {
+  const grid = document.getElementById('dayAssignmentGrid');
+  if (!grid) return;
+
+  const split = document.querySelector('input[name="workoutSplit"]:checked')?.value || 'apphandle';
+  const daysPerWeek = parseInt(document.querySelector('input[name="daysPerWeek"]:checked')?.value || '5');
+  const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  const splitCycle = SPLITS[split]?.cycle || SPLITS.apphandle.cycle;
+
+  // Assign split days to first N weekdays, rest = rest
+  let cycleIdx = 0;
+  grid.innerHTML = days.map((day, i) => {
+    const isWorkoutDay = i < daysPerWeek;
+    const splitDay = isWorkoutDay ? splitCycle[cycleIdx++ % splitCycle.length] : null;
+    const defaultMuscles = splitDay ? splitDay.muscles : [];
+    const defaultLabel = splitDay ? splitDay.label : 'Rest Day';
+
+    return `
+      <div class="day-row">
+        <div class="day-name">${day.substring(0,3).toUpperCase()}</div>
+        <div class="day-muscles">
+          <select class="day-select form-input" data-day="${day}" onchange="onDayChange('${day}', this.value)">
+            <option value="rest">🛌 Rest Day</option>
+            ${Object.entries(MUSCLE_LABELS).map(([k,v]) =>
+              `<option value="${k}" ${defaultMuscles.includes(k) ? (defaultMuscles.indexOf(k) === 0 ? 'selected' : '') : ''}>💪 ${v}</option>`
+            ).join('')}
+            ${['chest+back','chest+shoulders','back+biceps','chest+triceps','quads+hamstrings','quads+glutes','core+shoulders'].map(combo =>
+              `<option value="${combo}">💪 ${combo.split('+').map(m=>MUSCLE_LABELS[m]||m).join(' + ')}</option>`
+            ).join('')}
+            <option value="fullbody">⚡ Full Body</option>
+          </select>
+          <div class="day-label-preview" id="preview-${day}">${defaultLabel}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Set custom schedule from grid
+  days.forEach((day, i) => {
+    const isWorkout = i < daysPerWeek;
+    const splitDay = isWorkout ? splitCycle[(i > 0 ? i : 0) % splitCycle.length] : null;
+    customSchedule[day] = isWorkout && splitDay ? splitDay.muscles : null;
+  });
+}
+
+window.onDayChange = function(day, val) {
+  const preview = document.getElementById('preview-' + day);
+  if (val === 'rest') {
+    customSchedule[day] = null;
+    if (preview) preview.textContent = 'Rest Day';
+  } else if (val.includes('+')) {
+    customSchedule[day] = val.split('+');
+    if (preview) preview.textContent = val.split('+').map(m => MUSCLE_LABELS[m] || m).join(' + ');
+  } else {
+    customSchedule[day] = [val];
+    if (preview) preview.textContent = MUSCLE_LABELS[val] || val;
+  }
+};
+
 function renderOnboardingStep(step) {
   document.querySelectorAll('.onboard-step').forEach(s => s.classList.remove('active'));
   const el = document.querySelector(`.onboard-step[data-step="${step}"]`);
   if (el) el.classList.add('active');
+
   document.querySelectorAll('.step-dot').forEach(d => {
     const n = parseInt(d.dataset.step);
     d.classList.toggle('active', n === step);
     d.classList.toggle('done', n < step);
   });
+
   document.getElementById('btnBack').style.display = step > 1 ? 'block' : 'none';
-  document.getElementById('btnNext').textContent = step === 4 ? 'BEGIN ▶' : 'NEXT ▶';
-  if (step === 4) buildConfirmData();
+  document.getElementById('btnNext').textContent = step === totalSteps ? 'BEGIN ▶' : 'NEXT ▶';
+
+  if (step === 5) buildDayAssignmentGrid();
+  if (step === totalSteps) buildConfirmData();
 }
 
 function buildConfirmData() {
   const name = document.getElementById('ob-name').value || 'Unknown';
   const age = document.getElementById('ob-age').value || '—';
   const gender = document.getElementById('ob-gender').value || '—';
-  const height = document.getElementById('ob-height').value || '—';
-  const weight = document.getElementById('ob-weight').value || '—';
-  const activity = document.querySelector('input[name="activity"]:checked')?.value || '—';
   const fitness = document.querySelector('input[name="fitness"]:checked')?.value || '—';
   const goals = [...document.querySelectorAll('input[name="goals"]:checked')].map(g => g.value).join(', ') || '—';
-  const freetime = document.querySelector('input[name="freetime"]:checked')?.value || '—';
+  const workoutEnv = document.querySelector('input[name="workoutEnv"]:checked')?.value || '—';
+  const split = document.querySelector('input[name="workoutSplit"]:checked')?.value || '—';
+  const days = document.querySelector('input[name="daysPerWeek"]:checked')?.value || '—';
+
+  const envLabels = { gym:'🏋️ Gym', calisthenics:'🤸 Calisthenics', home:'🏠 Home' };
+  const splitLabel = SPLITS[split]?.label || split;
+
   const cd = document.getElementById('confirmData');
   cd.innerHTML = [
     ['NAME', name], ['AGE', age], ['GENDER', gender],
-    ['HEIGHT', height + ' cm'], ['WEIGHT', weight + ' kg'],
-    ['ACTIVITY', activity], ['FITNESS', fitness],
-    ['GOALS', goals], ['DAILY TIME', freetime]
+    ['FITNESS', fitness], ['GOALS', goals],
+    ['TRAINING ENV', envLabels[workoutEnv] || workoutEnv],
+    ['SPLIT', splitLabel], ['DAYS/WEEK', days + ' days']
   ].map(([l, v]) => `<div class="confirm-row"><span class="confirm-row-label">${l}</span><span class="confirm-row-val">${v}</span></div>`).join('');
 }
 
 window.onboardNext = function() {
   if (!validateStep(currentStep)) return;
-  if (currentStep === 4) { completeOnboarding(); return; }
+  if (currentStep === totalSteps) { completeOnboarding(); return; }
   currentStep++;
   renderOnboardingStep(currentStep);
 };
@@ -220,8 +473,7 @@ window.onboardBack = function() {
 
 function validateStep(step) {
   if (step === 1) {
-    const name = document.getElementById('ob-name').value.trim();
-    if (!name) { showToast('Enter your Hunter Name', 'error'); return false; }
+    if (!document.getElementById('ob-name').value.trim()) { showToast('Enter your Hunter Name', 'error'); return false; }
     if (!document.getElementById('ob-age').value) { showToast('Enter your age', 'error'); return false; }
     if (!document.getElementById('ob-gender').value) { showToast('Select your gender', 'error'); return false; }
   }
@@ -232,11 +484,15 @@ function validateStep(step) {
     if (!document.querySelector('input[name="fitness"]:checked')) { showToast('Select fitness level', 'error'); return false; }
   }
   if (step === 3) {
-    const goals = document.querySelectorAll('input[name="goals"]:checked');
-    if (goals.length === 0) { showToast('Select at least one goal', 'error'); return false; }
+    if (!document.querySelectorAll('input[name="goals"]:checked').length) { showToast('Select at least one goal', 'error'); return false; }
     if (!document.querySelector('input[name="freetime"]:checked')) { showToast('Select daily free time', 'error'); return false; }
   }
   if (step === 4) {
+    if (!document.querySelector('input[name="workoutEnv"]:checked')) { showToast('Select where you train', 'error'); return false; }
+    if (!document.querySelector('input[name="workoutSplit"]:checked')) { showToast('Select a workout split', 'error'); return false; }
+    if (!document.querySelector('input[name="daysPerWeek"]:checked')) { showToast('Select days per week', 'error'); return false; }
+  }
+  if (step === totalSteps) {
     if (!document.getElementById('ob-accept').checked) { showToast('You must accept the System terms', 'error'); return false; }
   }
   return true;
@@ -244,23 +500,35 @@ function validateStep(step) {
 
 function completeOnboarding() {
   const goals = [...document.querySelectorAll('input[name="goals"]:checked')].map(g => g.value);
+  const workoutEnv = document.querySelector('input[name="workoutEnv"]:checked')?.value || 'home';
+  const workoutSplit = document.querySelector('input[name="workoutSplit"]:checked')?.value || 'apphandle';
+  const daysPerWeek = document.querySelector('input[name="daysPerWeek"]:checked')?.value || '5';
+
   STATE.hunter = {
-    name: document.getElementById('ob-name').value.trim(),
-    age: document.getElementById('ob-age').value,
-    gender: document.getElementById('ob-gender').value,
-    height: document.getElementById('ob-height').value,
-    weight: document.getElementById('ob-weight').value,
-    activity: document.querySelector('input[name="activity"]:checked')?.value,
-    fitness: document.querySelector('input[name="fitness"]:checked')?.value,
-    goals: goals,
-    freetime: document.querySelector('input[name="freetime"]:checked')?.value,
-    wakeup: document.getElementById('ob-wakeup').value,
-    sleep: document.getElementById('ob-sleep').value,
+    name:        document.getElementById('ob-name').value.trim(),
+    age:         document.getElementById('ob-age').value,
+    gender:      document.getElementById('ob-gender').value,
+    height:      document.getElementById('ob-height').value,
+    weight:      document.getElementById('ob-weight').value,
+    activity:    document.querySelector('input[name="activity"]:checked')?.value,
+    fitness:     document.querySelector('input[name="fitness"]:checked')?.value || 'intermediate',
+    goals:       goals,
+    freetime:    document.querySelector('input[name="freetime"]:checked')?.value,
+    wakeup:      document.getElementById('ob-wakeup').value,
+    sleep:       document.getElementById('ob-sleep').value,
+    workoutEnv:  workoutEnv,
+    workoutSplit:workoutSplit,
+    daysPerWeek: daysPerWeek,
+    customSchedule: customSchedule,
+    startDate:   new Date().toISOString(),
   };
+
   STATE.stats = {};
   STATS_LIST.forEach(s => STATE.stats[s] = 5);
-  STATE.rp = 0; STATE.theme = selectedTheme;
-  saveState(); applyTheme(selectedTheme);
+  STATE.rp = 0;
+  STATE.theme = selectedTheme;
+  saveState();
+  applyTheme(selectedTheme);
   showApp();
 }
 
@@ -269,15 +537,16 @@ function completeOnboarding() {
 function applyTheme(theme) {
   document.body.classList.toggle('dark-mode', theme === 'dark');
   document.body.classList.toggle('light-mode', theme === 'light');
-  const themeColor = theme === 'dark' ? '#0a0a0a' : '#f5f5f5';
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', themeColor);
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', theme === 'dark' ? '#0a0a0a' : '#f5f5f5');
 }
 
 window.toggleTheme = function() {
   STATE.theme = STATE.theme === 'dark' ? 'light' : 'dark';
   applyTheme(STATE.theme);
   saveState();
-  document.querySelectorAll('.icon-btn').forEach(b => { if (b.textContent.trim() === '☀' || b.textContent.trim() === '🌙') b.textContent = STATE.theme === 'dark' ? '☀' : '🌙'; });
+  document.querySelectorAll('.icon-btn').forEach(b => {
+    if (b.textContent.trim() === '☀' || b.textContent.trim() === '🌙') b.textContent = STATE.theme === 'dark' ? '☀' : '🌙';
+  });
   showToast(STATE.theme === 'dark' ? 'DARK MODE ACTIVATED' : 'LIGHT MODE ACTIVATED');
 };
 
@@ -291,126 +560,36 @@ window.switchTab = function(tab) {
   const nb = document.querySelector(`.nav-btn[data-tab="${tab}"]`);
   if (tc) tc.classList.add('active');
   if (nb) nb.classList.add('active');
-  if (tab === 'stats') { renderStats(); renderRankTable(); }
-  if (tab === 'shop') { renderShop(); }
+  if (tab === 'stats')     { renderStats(); renderRankTable(); }
+  if (tab === 'shop')      { renderShop(); }
   if (tab === 'inventory') { renderInventory(); }
-  if (tab === 'quests') { renderQuests(); }
+  if (tab === 'quests')    { renderQuests(); }
 };
 
-// ─── QUEST GENERATION (AI) ────────────────────────────────────────────────────
+// ─── QUEST GENERATION (LOCAL) ─────────────────────────────────────────────────
 
-async function generateDailyQuests() {
+window.generateDailyQuests = function() {
   const today = getTodayStr();
   if (STATE.lastQuestDate === today && STATE.quests.length > 0) {
     showToast('QUESTS ALREADY ASSIGNED FOR TODAY', 'error');
+    switchTab('quests');
     return;
   }
-  showLoadingModal('SYSTEM IS GENERATING YOUR MISSIONS...');
-  try {
-    const quests = await callAIForQuests();
-    STATE.quests = quests;
-    STATE.lastQuestDate = today;
-    STATE.rpTodayEarned = 0;
-    STATE.statsTodayGained = 0;
-    STATE.questsCompleted = 0;
-    saveState();
-    closeModal();
-    syncUI();
-    renderQuests();
-    switchTab('quests');
-    showToast('MISSIONS ASSIGNED. BEGIN YOUR HUNT.', 'success');
-  } catch(e) {
-    closeModal();
-    showToast('SYSTEM CONNECTION FAILED. RETRY.', 'error');
-    console.error(e);
-  }
-}
 
-async function callAIForQuests() {
-  const h = STATE.hunter;
-  const totalStats = getTotalStats();
   const rankName = getCurrentRank().name;
-  const isChallengeDay = shouldAddChallengeQuest();
+  const quests = generateQuestsLocally(STATE.hunter, rankName);
 
-  const prompt = buildQuestPrompt(h, totalStats, rankName, isChallengeDay);
-
-  const response = await fetch('/api/quest', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-
-  if (!response.ok) throw new Error('API error: ' + response.status);
-  const data = await response.json();
-  const raw = data.content.map(c => c.text || '').join('');
-  const clean = raw.replace(/```json|```/g, '').trim();
-  const parsed = JSON.parse(clean);
-  return parsed.quests;
-}
-
-function buildQuestPrompt(h, totalStats, rankName, isChallengeDay) {
-  const activityMap = { sedentary:'Sedentary', light:'Light activity', moderate:'Moderate', active:'Very active', athlete:'Athlete-level' };
-  const fitnessMap = { beginner:'Beginner', intermediate:'Intermediate', advanced:'Advanced' };
-  const freetimeMap = { '30min':'under 30 minutes', '1hr':'about 1 hour', '2hr':'1-2 hours', '3hr+':'3+ hours' };
-  const goalLabels = {
-    lose_weight:'lose weight', build_muscle:'build muscle', study_more:'study and learn more',
-    be_social:'improve social skills', discipline:'build discipline and habits',
-    appearance:'improve appearance and grooming', mental_health:'improve mental clarity and wellness'
-  };
-  const goalsStr = (h.goals || []).map(g => goalLabels[g] || g).join(', ');
-  const statStr = STATS_LIST.map(s => `${s}:${STATE.stats[s]}`).join(', ');
-
-  return `You are the System from Solo Leveling — a cold, efficient, omniscient AI that assigns real-life improvement quests to hunters.
-
-HUNTER PROFILE:
-- Name: ${h.name}
-- Age: ${h.age}, Gender: ${h.gender}
-- Height: ${h.height}cm, Weight: ${h.weight}kg
-- Activity Level: ${activityMap[h.activity] || h.activity}
-- Fitness Level: ${fitnessMap[h.fitness] || h.fitness}
-- Goals: ${goalsStr}
-- Daily Free Time: ${freetimeMap[h.freetime] || h.freetime}
-- Current Rank: ${rankName} (Total Stat Points: ${totalStats})
-- Current Stats: ${statStr}
-
-QUEST GENERATION RULES:
-1. Generate exactly 8 daily quests, 1 special quest, 2 bonus quests${isChallengeDay ? ', and 1 challenging quest' : ''}.
-2. Quests MUST be real-life actionable tasks calibrated to the hunter's actual fitness level and goals.
-3. Quests scale in difficulty as hunter rank increases. Current rank is ${rankName}.
-4. Each quest must target a specific stat from: ${STATS_LIST.join(', ')}.
-5. Use a cold, commanding System voice for quest descriptions (no friendly tone).
-6. Reward ranges: daily=10-50 RP + 1-5 stat, special=50-150 RP + 3-10 stat, bonus=40-120 RP + 2-8 stat${isChallengeDay ? ', challenging=150-500 RP + 10-25 stat' : ''}.
-7. Map quests appropriately: fitness→Strength/Stamina/Speed/Durability, study→Intelligence/Wisdom, social→Charisma, discipline→Discipline, grooming/appearance→Appearance, movement→Agility/Dexterity.
-8. Make quests specific and measurable (not vague). Include numbers/durations where possible.
-
-Respond ONLY with valid JSON, no preamble, no markdown, exactly this structure:
-{
-  "quests": [
-    {
-      "id": "q1",
-      "type": "daily",
-      "name": "Quest name (max 6 words)",
-      "description": "Cold system-voice description of exactly what to do. Be specific.",
-      "stat": "StatName",
-      "rp": 30,
-      "statGain": 2,
-      "completed": false
-    }
-  ]
-}
-
-Types: "daily" (×8), "special" (×1), "bonus" (×2)${isChallengeDay ? ', "challenging" (×1)' : ''}.`;
-}
-
-function shouldAddChallengeQuest() {
-  const today = new Date().toDateString();
-  const dayNum = Math.floor(new Date() / (1000 * 60 * 60 * 24));
-  return dayNum % 2 === 0;
-}
+  STATE.quests = quests;
+  STATE.lastQuestDate = today;
+  STATE.rpTodayEarned = 0;
+  STATE.statsTodayGained = 0;
+  STATE.questsCompleted = 0;
+  saveState();
+  syncUI();
+  renderQuests();
+  switchTab('quests');
+  showToast('MISSIONS ASSIGNED. BEGIN YOUR HUNT.', 'success');
+};
 
 // ─── QUEST COMPLETION ─────────────────────────────────────────────────────────
 
@@ -422,9 +601,8 @@ window.completeQuest = function(questId) {
   let rpGain = quest.rp;
   let statGain = quest.statGain;
 
-  // Apply active item effects
   if (STATE.activeEffects?.doubleRewards) { rpGain *= 2; statGain *= 2; }
-  if (STATE.activeEffects?.taskBooster) { rpGain *= 2; statGain *= 2; STATE.activeEffects.taskBooster = false; }
+  if (STATE.activeEffects?.taskBooster)   { rpGain *= 2; statGain *= 2; STATE.activeEffects.taskBooster = false; }
 
   STATE.rp += rpGain;
   STATE.stats[quest.stat] = (STATE.stats[quest.stat] || 5) + statGain;
@@ -432,24 +610,17 @@ window.completeQuest = function(questId) {
   STATE.statsTodayGained += statGain;
   STATE.questsCompleted++;
 
-  // Check bonus chest (10% base chance, increases with rank)
   const chestChance = 0.10 + (getTotalStats() / 10000);
   let bonusChest = null;
   if (Math.random() < chestChance || STATE.activeEffects?.guaranteeChest) {
-    bonusChest = generateBonusChest();
+    bonusChest = { id: 'chest_' + Date.now(), reward: CHEST_REWARDS[Math.floor(Math.random() * CHEST_REWARDS.length)] };
     STATE.bonusChests.push(bonusChest);
     if (STATE.activeEffects?.guaranteeChest) STATE.activeEffects.guaranteeChest = false;
   }
 
-  saveState();
-  syncUI();
-  renderQuests();
+  saveState(); syncUI(); renderQuests();
   showQuestCompleteModal(quest, rpGain, statGain, bonusChest);
 };
-
-function generateBonusChest() {
-  return { id: 'chest_' + Date.now(), reward: CHEST_REWARDS[Math.floor(Math.random() * CHEST_REWARDS.length)] };
-}
 
 window.openChest = function(chestId) {
   const idx = STATE.bonusChests.findIndex(c => c.id === chestId);
@@ -457,18 +628,17 @@ window.openChest = function(chestId) {
   const chest = STATE.bonusChests.splice(idx, 1)[0];
   const r = chest.reward;
 
-  if (r.type === 'rp') { STATE.rp += r.amount; }
-  else if (r.type === 'stat') {
+  if (r.type === 'rp') {
+    STATE.rp += r.amount;
+  } else if (r.type === 'stat') {
     const stat = STATS_LIST[Math.floor(Math.random() * STATS_LIST.length)];
     STATE.stats[stat] = (STATE.stats[stat] || 5) + r.amount;
-  }
-  else if (r.type === 'multi_stat') {
+  } else if (r.type === 'multi_stat') {
     for (let i = 0; i < 2; i++) {
       const stat = STATS_LIST[Math.floor(Math.random() * STATS_LIST.length)];
       STATE.stats[stat] = (STATE.stats[stat] || 5) + r.amount;
     }
-  }
-  else if (r.type === 'item') {
+  } else if (r.type === 'item') {
     addToInventory(r.itemId, 1);
   }
 
@@ -486,14 +656,11 @@ function renderShop() {
       <div class="shop-item-icon">${item.icon}</div>
       <div class="shop-item-name">${item.name}</div>
       <div class="shop-item-effect">${item.effect}</div>
-      <div class="shop-item-cost">
-        <span class="shop-item-cost-icon">◆</span> ${item.cost}
-      </div>
+      <div class="shop-item-cost"><span class="shop-item-cost-icon">◆</span> ${item.cost}</div>
       <button class="btn-buy" onclick="purchaseItem('${item.id}')" ${STATE.rp < item.cost ? 'disabled' : ''}>
         ${STATE.rp >= item.cost ? 'PURCHASE' : 'INSUFFICIENT RP'}
       </button>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 window.purchaseItem = function(itemId) {
@@ -523,14 +690,12 @@ function renderInventory() {
   grid.innerHTML = STATE.inventory.map(inv => {
     const item = SHOP_ITEMS.find(i => i.id === inv.id);
     if (!item) return '';
-    return `
-      <div class="inv-item">
-        <div class="inv-item-qty">${inv.qty}</div>
-        <div class="inv-item-icon">${item.icon}</div>
-        <div class="inv-item-name">${item.name}</div>
-        <button class="btn-use-inv" onclick="useItem('${inv.id}')">USE</button>
-      </div>
-    `;
+    return `<div class="inv-item">
+      <div class="inv-item-qty">${inv.qty}</div>
+      <div class="inv-item-icon">${item.icon}</div>
+      <div class="inv-item-name">${item.name}</div>
+      <button class="btn-use-inv" onclick="useItem('${inv.id}')">USE</button>
+    </div>`;
   }).join('');
 }
 
@@ -539,21 +704,20 @@ window.useItem = function(itemId) {
   if (!invItem || invItem.qty <= 0) return;
   const shopItem = SHOP_ITEMS.find(i => i.id === itemId);
   if (!shopItem) return;
-
   if (!STATE.activeEffects) STATE.activeEffects = {};
 
   switch(itemId) {
-    case 'skip_quest': skipOneRandomQuest(); break;
+    case 'skip_quest':    skipOneRandomQuest(); break;
     case 'cheat_day':
-    case 'skip_day': skipAllQuests(); break;
-    case 'half_day': activateHalfDay(); break;
+    case 'skip_day':      skipAllQuests(); break;
+    case 'half_day':      activateHalfDay(); break;
     case 'double_rp':
     case 'rp_multiplier': STATE.activeEffects.doubleRewards = true; showToast('DOUBLE RP ACTIVATED'); break;
-    case 'hard_work': STATE.activeEffects.doubleRewards = true; showToast('HARD WORK MODE: 2X REWARDS'); break;
-    case 'task_booster': STATE.activeEffects.taskBooster = true; showToast('TASK BOOSTER READY'); break;
+    case 'hard_work':     STATE.activeEffects.doubleRewards = true; showToast('HARD WORK MODE: 2X REWARDS'); break;
+    case 'task_booster':  STATE.activeEffects.taskBooster = true; showToast('TASK BOOSTER READY'); break;
     case 'bonus_chest_key': STATE.activeEffects.guaranteeChest = true; showToast('NEXT QUEST GUARANTEES A CHEST', 'gold'); break;
-    case 'refresh_quests': STATE.quests = []; STATE.lastQuestDate = null; generateDailyQuests(); break;
-    case 'swap_quest': swapRandomQuest(); break;
+    case 'refresh_quests': STATE.quests = []; STATE.lastQuestDate = null; window.generateDailyQuests(); break;
+    case 'swap_quest':    swapRandomQuest(); break;
     case 'auto_complete': autoCompleteOneQuest(); break;
     default: showToast(shopItem.name + ' ACTIVATED'); break;
   }
@@ -565,8 +729,8 @@ window.useItem = function(itemId) {
 
 function skipOneRandomQuest() {
   const pending = STATE.quests.filter(q => !q.completed && q.type === 'daily');
-  if (pending.length === 0) { showToast('NO PENDING QUESTS TO SKIP', 'error'); return; }
-  const q = pending[0]; q.completed = true; q.skipped = true;
+  if (!pending.length) { showToast('NO PENDING QUESTS TO SKIP', 'error'); return; }
+  pending[0].completed = true; pending[0].skipped = true;
   saveState(); renderQuests(); showToast('QUEST SKIPPED');
 }
 
@@ -577,23 +741,34 @@ function skipAllQuests() {
 
 function activateHalfDay() {
   const daily = STATE.quests.filter(q => q.type === 'daily' && !q.completed);
-  const toSkip = daily.slice(4);
-  toSkip.forEach(q => { q.completed = true; q.skipped = true; });
+  daily.slice(4).forEach(q => { q.completed = true; q.skipped = true; });
   saveState(); renderQuests(); showToast('HALF-DAY ACTIVATED: 4 QUESTS REMAIN');
 }
 
 function swapRandomQuest() {
   const pending = STATE.quests.filter(q => !q.completed && q.type === 'daily');
   if (!pending.length) { showToast('NO QUESTS TO SWAP', 'error'); return; }
-  pending[0].name = 'Swapped Quest';
-  pending[0].description = 'Complete 10 minutes of focused breathing and meditation.';
+
+  // Generate one replacement quest
+  const rankName = getCurrentRank().name;
+  const hunter = STATE.hunter;
+  const usedNames = STATE.quests.map(q => q.name);
+  const muscles = ['core','fullbody','chest','back'];
+  const muscle = muscles[Math.floor(Math.random() * muscles.length)];
+  const newOnes = pickQuestsForMuscle(muscle, hunter.fitness, rankName, hunter.workoutEnv, 1, usedNames);
+
+  if (newOnes.length) {
+    const idx = STATE.quests.indexOf(pending[0]);
+    STATE.quests[idx] = { ...newOnes[0], type: 'daily' };
+  }
+
   saveState(); renderQuests(); showToast('QUEST SWAPPED');
 }
 
 function autoCompleteOneQuest() {
   const pending = STATE.quests.filter(q => !q.completed);
   if (!pending.length) { showToast('ALL QUESTS DONE', 'success'); return; }
-  completeQuest(pending[0].id);
+  window.completeQuest(pending[0].id);
   showToast('AUTO-COMPLETE USED');
 }
 
@@ -606,19 +781,18 @@ function renderStats() {
     const val = STATE.stats[stat] || 5;
     const maxForBar = Math.max(50, val + 20);
     const pct = Math.min(100, (val / maxForBar) * 100);
-    return `
-      <div class="stat-row">
-        <div class="stat-name-col">
-          <span style="color:${STAT_COLORS[stat]}">${STAT_ICONS[stat]}</span>
-          <span class="stat-name"> ${stat}</span>
+    return `<div class="stat-row">
+      <div class="stat-name-col">
+        <span style="color:${STAT_COLORS[stat]}">${STAT_ICONS[stat]}</span>
+        <span class="stat-name"> ${stat}</span>
+      </div>
+      <div class="stat-bar-col">
+        <div class="stat-bar-track">
+          <div class="stat-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${STAT_COLORS[stat]}88,${STAT_COLORS[stat]})"></div>
         </div>
-        <div class="stat-bar-col">
-          <div class="stat-bar-track">
-            <div class="stat-bar-fill" style="width:${pct}%;background:linear-gradient(90deg,${STAT_COLORS[stat]}88,${STAT_COLORS[stat]})"></div>
-          </div>
-        </div>
-        <div class="stat-val-col" style="color:${STAT_COLORS[stat]}">${val}</div>
-      </div>`;
+      </div>
+      <div class="stat-val-col" style="color:${STAT_COLORS[stat]}">${val}</div>
+    </div>`;
   }).join('');
 }
 
@@ -627,9 +801,9 @@ function renderRankTable() {
   const rt = document.getElementById('rankTable');
   rt.innerHTML = RANKS.map(r => {
     const achieved = total >= r.max;
-    const current = total >= r.min && total <= r.max;
+    const current  = total >= r.min && total < r.max;
     let cls = ''; let badge = '';
-    if (current) { cls = 'current'; badge = '<span class="rank-status-badge current">CURRENT</span>'; }
+    if (current)  { cls = 'current';  badge = '<span class="rank-status-badge current">CURRENT</span>'; }
     else if (achieved) { cls = 'achieved'; badge = '<span class="rank-status-badge achieved">✓</span>'; }
     else { badge = '<span class="rank-status-badge locked">LOCKED</span>'; }
     return `<div class="rank-row ${cls}">
@@ -655,30 +829,41 @@ function renderMiniStats() {
 function renderQuests() {
   const list = document.getElementById('questList');
   const filter = STATE.activeFilter;
+
   if (!STATE.quests.length) {
-    list.innerHTML = `<div class="no-quests"><div class="no-quest-icon">◈</div><div class="no-quest-text">NO MISSIONS ASSIGNED</div><div class="no-quest-sub">Return to STATUS and generate today's quests</div></div>`;
+    list.innerHTML = `<div class="no-quests">
+      <div class="no-quest-icon">◈</div>
+      <div class="no-quest-text">NO MISSIONS ASSIGNED</div>
+      <div class="no-quest-sub">Return to STATUS and generate today's quests</div>
+    </div>`;
     return;
   }
-  let filtered = STATE.quests;
-  if (filter !== 'all') filtered = STATE.quests.filter(q => q.type === filter);
+
+  let filtered = filter === 'all' ? STATE.quests : STATE.quests.filter(q => q.type === filter);
   if (!filtered.length) {
     list.innerHTML = `<div class="no-quests"><div class="no-quest-icon">◈</div><div class="no-quest-text">NO ${filter.toUpperCase()} QUESTS</div></div>`;
     return;
   }
+
   list.innerHTML = filtered.map(q => questCard(q)).join('');
   const now = new Date();
-  document.getElementById('questDate').textContent = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }).toUpperCase();
+  const el = document.getElementById('questDate');
+  if (el) el.textContent = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }).toUpperCase();
+
+  // Show today's muscle group
+  const todayMuscles = STATE.hunter ? getMusclesForToday(STATE.hunter) : null;
+  const muscleStr = todayMuscles ? todayMuscles.map(m => MUSCLE_LABELS[m] || m).join(' + ') : 'Rest Day';
+  showToast('TODAY: ' + muscleStr);
 }
 
 function questCard(q) {
-  const typeColors = { daily:'daily', special:'special', bonus:'bonus', challenging:'challenging' };
-  const typeBadge = typeColors[q.type] || 'daily';
   const statColor = STAT_COLORS[q.stat] || 'var(--accent)';
+  const muscleTag = q.muscle && q.muscle !== 'lifestyle' ? `<span class="muscle-tag">${MUSCLE_LABELS[q.muscle] || q.muscle}</span>` : '';
   return `
     <div class="quest-card ${q.completed ? 'completed' : ''} ${q.type === 'challenging' ? 'challenging' : ''} ${q.type === 'special' ? 'special' : ''}">
       <div class="quest-type-bar ${q.type}"></div>
       <div class="quest-header-row">
-        <span class="quest-type-badge ${typeBadge}">${q.type.toUpperCase()}</span>
+        <span class="quest-type-badge ${q.type}">${q.type.toUpperCase()}</span>
         <div class="quest-rewards-mini">
           <span class="qr-rp">◆ ${q.rp} RP</span>
           <span class="qr-stat">+${q.statGain} ${q.stat}</span>
@@ -686,7 +871,10 @@ function questCard(q) {
       </div>
       <div class="quest-name">${q.name}</div>
       <div class="quest-desc">${q.description}</div>
-      <div class="quest-stat-tag"><div class="stat-dot" style="background:${statColor}"></div>${STAT_ICONS[q.stat] || ''} ${q.stat}</div>
+      <div class="quest-stat-tag">
+        <div class="stat-dot" style="background:${statColor}"></div>
+        ${STAT_ICONS[q.stat] || ''} ${q.stat} ${muscleTag}
+      </div>
       <div class="quest-actions">
         <button class="btn-complete" onclick="completeQuest('${q.id}')" ${q.completed ? 'disabled' : ''}>
           ${q.completed ? (q.skipped ? '— SKIPPED' : '✓ COMPLETE') : 'MARK COMPLETE'}
@@ -701,6 +889,27 @@ window.filterQuests = function(f) {
   event.target.classList.add('active');
   renderQuests();
 };
+
+// ─── TODAY'S MUSCLE RESOLVER ──────────────────────────────────────────────────
+
+function getMusclesForToday(hunter) {
+  const schedule = hunter.customSchedule || {};
+  const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const todayName = dayNames[new Date().getDay()];
+  const todayMuscles = schedule[todayName];
+  if (todayMuscles === null || todayMuscles === undefined) {
+    // Fallback to split cycle
+    const split = SPLITS[hunter.workoutSplit] || SPLITS.apphandle;
+    const startDate = hunter.startDate ? new Date(hunter.startDate) : new Date();
+    const daysSince = Math.floor((new Date() - startDate) / (1000*60*60*24));
+    const daysPerWeek = parseInt(hunter.daysPerWeek) || 5;
+    const dayOfWeek = new Date().getDay();
+    const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    if (adjustedDay >= daysPerWeek) return null; // rest day
+    return split.cycle[daysSince % split.cycle.length]?.muscles || ['fullbody'];
+  }
+  return todayMuscles;
+}
 
 // ─── RANK & STATS HELPERS ─────────────────────────────────────────────────────
 
@@ -729,26 +938,23 @@ function getNextRank() {
 
 function syncUI() {
   if (!STATE.hunter) return;
-  const rank = getCurrentRank();
+  const rank  = getCurrentRank();
   const total = getTotalStats();
-  const next = getNextRank();
-  const name = STATE.hunter.name.toUpperCase();
+  const next  = getNextRank();
+  const name  = STATE.hunter.name.toUpperCase();
 
-  // Header
   document.getElementById('headerName').textContent = name;
   document.getElementById('headerRank').textContent = rank.short;
   document.getElementById('headerRankLabel').textContent = rank.name.toUpperCase();
   document.getElementById('headerRP').textContent = STATE.rp;
   document.getElementById('shopRP').textContent = STATE.rp;
 
-  // Dashboard
   document.getElementById('dcRank').textContent = rank.name.toUpperCase();
   document.getElementById('dcName').textContent = name;
   document.getElementById('dcTotalStats').textContent = total;
   document.getElementById('dcRP').textContent = STATE.rp;
   document.getElementById('dcStreak').textContent = STATE.streak;
 
-  // Rank progress
   document.getElementById('rpCurrentRank').textContent = rank.name.toUpperCase();
   if (next) {
     document.getElementById('rpNextRank').textContent = next.name.toUpperCase();
@@ -761,40 +967,47 @@ function syncUI() {
     document.getElementById('rankProgressText').textContent = `${total} — DEMI GOD ACHIEVED`;
   }
 
-  // Mission summary
   const completed = STATE.quests.filter(q => q.completed && !q.skipped).length;
   document.getElementById('dcQuestDone').textContent = completed;
   document.getElementById('dcQuestTotal').textContent = STATE.quests.length;
   document.getElementById('dcRPToday').textContent = STATE.rpTodayEarned;
   document.getElementById('dcStatToday').textContent = STATE.statsTodayGained;
 
-  // Mini stats
   renderMiniStats();
 
-  // Settings
   document.getElementById('settingName').textContent = name;
 
-  // Bonus chests
   const chestArea = document.getElementById('bonusChestArea');
   if (STATE.bonusChests.length > 0) {
     chestArea.style.display = 'block';
-    document.getElementById('chestList').innerHTML = STATE.bonusChests.map(c => `
-      <div class="chest-item" onclick="openChest('${c.id}')">
-        <div class="chest-icon">⬡</div>
-        <div class="chest-label">BONUS CHEST</div>
-      </div>`).join('');
+    document.getElementById('chestList').innerHTML = STATE.bonusChests.map(c =>
+      `<div class="chest-item" onclick="openChest('${c.id}')"><div class="chest-icon">⬡</div><div class="chest-label">BONUS CHEST</div></div>`
+    ).join('');
   } else {
     chestArea.style.display = 'none';
   }
 
-  // Generate btn text
   const today = getTodayStr();
+  const genBtn = document.getElementById('btnGenerate');
   if (STATE.lastQuestDate === today && STATE.quests.length > 0) {
-    document.getElementById('btnGenerate').querySelector('.btn-gen-text').textContent = 'MISSIONS ASSIGNED TODAY';
-    document.getElementById('btnGenerate').querySelector('.btn-gen-sub').textContent = 'Go to QUESTS tab to view missions';
+    genBtn.querySelector('.btn-gen-text').textContent = 'MISSIONS ASSIGNED TODAY';
+    genBtn.querySelector('.btn-gen-sub').textContent = 'Go to QUESTS tab to view missions';
   } else {
-    document.getElementById('btnGenerate').querySelector('.btn-gen-text').textContent = 'GENERATE TODAY\'S QUESTS';
-    document.getElementById('btnGenerate').querySelector('.btn-gen-sub').textContent = 'AI-powered mission assignment';
+    genBtn.querySelector('.btn-gen-text').textContent = "GENERATE TODAY'S QUESTS";
+    genBtn.querySelector('.btn-gen-sub').textContent = 'Instant mission assignment — no API needed';
+  }
+
+  // Show today's training info on dashboard
+  const todayMuscles = getMusclesForToday(STATE.hunter);
+  const todayInfo = document.getElementById('todayTrainingInfo');
+  if (todayInfo) {
+    if (todayMuscles) {
+      todayInfo.textContent = '⚔ TODAY: ' + todayMuscles.map(m => MUSCLE_LABELS[m] || m).join(' + ');
+      todayInfo.style.display = 'block';
+    } else {
+      todayInfo.textContent = '💤 TODAY: REST DAY';
+      todayInfo.style.display = 'block';
+    }
   }
 }
 
@@ -803,14 +1016,9 @@ function syncUI() {
 function checkDailyReset() {
   const today = getTodayStr();
   if (STATE.lastQuestDate && STATE.lastQuestDate !== today) {
-    // New day — check if any quests were completed yesterday
     const completedYesterday = STATE.quests.filter(q => q.completed && !q.skipped).length > 0;
-    if (completedYesterday) {
-      STATE.streak++;
-      STATE.penaltyDays = 0;
-    } else {
-      STATE.penaltyDays++;
-    }
+    if (completedYesterday) { STATE.streak++; STATE.penaltyDays = 0; }
+    else { STATE.penaltyDays++; }
     STATE.rpTodayEarned = 0;
     STATE.statsTodayGained = 0;
     STATE.questsCompleted = 0;
@@ -822,9 +1030,7 @@ function checkPenalty() {
   if (STATE.penaltyDays >= 2) {
     const rpLoss = Math.floor(STATE.rp * 0.15);
     STATE.rp = Math.max(0, STATE.rp - rpLoss);
-    STATS_LIST.forEach(s => {
-      STATE.stats[s] = Math.max(1, (STATE.stats[s] || 5) - 2);
-    });
+    STATS_LIST.forEach(s => { STATE.stats[s] = Math.max(1, (STATE.stats[s] || 5) - 2); });
     STATE.penaltyDays = 0;
     saveState();
     showPenaltyModal(rpLoss);
@@ -838,8 +1044,7 @@ function showQuestCompleteModal(quest, rp, stat, bonusChest) {
   document.getElementById('mqRP').textContent = '+' + rp + ' RP';
   document.getElementById('mqStat').textContent = '+' + stat;
   document.getElementById('mqStatType').textContent = quest.stat;
-  const bonusEl = document.getElementById('mqBonus');
-  bonusEl.style.display = bonusChest ? 'block' : 'none';
+  document.getElementById('mqBonus').style.display = bonusChest ? 'block' : 'none';
   showModal('modalQuestComplete');
 }
 
@@ -849,17 +1054,10 @@ function showChestModal(reward) {
   showModal('modalChest');
 }
 
-function showLoadingModal(msg) {
-  document.getElementById('loadingMsg').textContent = msg || 'Processing...';
-  showModal('modalLoading');
-}
-
 function showPenaltyModal(rpLoss) {
-  const details = document.getElementById('penaltyDetails');
-  details.innerHTML = `
+  document.getElementById('penaltyDetails').innerHTML = `
     <div class="reward-row"><span class="reward-label">RP LOST</span><span class="reward-val" style="color:var(--danger)">-${rpLoss}</span></div>
-    <div class="reward-row"><span class="reward-label">ALL STATS</span><span class="reward-val" style="color:var(--danger)">-2 EACH</span></div>
-  `;
+    <div class="reward-row"><span class="reward-label">ALL STATS</span><span class="reward-val" style="color:var(--danger)">-2 EACH</span></div>`;
   showModal('modalPenalty');
 }
 
@@ -880,7 +1078,7 @@ window.hideSettings = function() { document.getElementById('settingsPanel').clas
 
 window.confirmReset = function() {
   if (confirm('RESET ALL PROGRESS? This cannot be undone.')) {
-    localStorage.removeItem('soloLevelingState');
+    localStorage.clear();
     location.reload();
   }
 };
