@@ -1370,9 +1370,10 @@ function getMusclesForToday(hunter) {
 
   // If custom schedule is set, use it
   if (customSchedule) {
-    const dayOfWeek = new Date().getDay(); // 0 = Sunday
-    const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Mon=0
-    return customSchedule[adjustedDay] || null; // null = rest day
+    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const todayName = dayNames[new Date().getDay()];
+    const muscles = customSchedule[todayName];
+    return (muscles && muscles.length > 0) ? muscles : null;
   }
 
   // Use split schedule
