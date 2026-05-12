@@ -230,11 +230,21 @@
         </div>
       </div>
       <div class="form-group">
-        <label class="check-item accept-check">
-          <input type="checkbox" id="ob-accept" />
-          <span>I ACCEPT. I will become stronger.</span>
-        </label>
+        <div style="border:2px solid var(--accent);border-radius:10px;padding:1rem;margin-top:0.5rem;background:rgba(220,20,40,0.08);animation:acceptPulse 2s ease-in-out infinite;">
+          <label class="check-item accept-check" style="display:flex;align-items:center;gap:1rem;cursor:pointer;margin:0;">
+            <input type="checkbox" id="ob-accept" style="width:24px;height:24px;accent-color:var(--accent);flex-shrink:0;cursor:pointer;" />
+            <span style="color:var(--accent);font-weight:700;font-size:0.95rem;letter-spacing:0.06em;font-family:var(--font-main);">
+              ⚔ I ACCEPT THE SYSTEM TERMS.<br/>I WILL BECOME STRONGER.
+            </span>
+          </label>
+        </div>
       </div>
+      <style>
+        @keyframes acceptPulse {
+          0%,100% { box-shadow: 0 0 0px rgba(220,20,40,0.3); }
+          50%      { box-shadow: 0 0 14px rgba(220,20,40,0.7); }
+        }
+      </style>
     </div>
 
     <div class="onboard-nav">
