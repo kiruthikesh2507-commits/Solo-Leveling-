@@ -36,7 +36,6 @@ Install the "Live Server" extension, right-click index.html → "Open with Live 
 ---
 
 ### FEATURES
-- 🤖 AI-generated personalized daily quests (powered by Claude)
 - 📊 11-stat RPG progression system
 - 🏆 10-tier rank system (E → DEMI GOD)
 - 🎁 Bonus chest rewards
@@ -49,6 +48,5 @@ Install the "Live Server" extension, right-click index.html → "Open with Live 
 ---
 
 ### NOTES
-- Your API key is handled automatically via the app's connection
 - All progress is saved locally in your browser's storage
 - To export progress: Open DevTools → Application → Local Storage
