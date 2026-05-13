@@ -289,6 +289,12 @@ window.checkAchievements = function() {
     if (typeof syncUI === 'function') syncUI();
     _showNextAchUnlock();
   }
+
+  // Always re-render achievements list if tab is visible
+  if (typeof renderAchievements === 'function') {
+    const achTab = document.getElementById('tab-achievements');
+    if (achTab && achTab.classList.contains('active')) renderAchievements();
+  }
 };
 
 function _showNextAchUnlock() {
@@ -353,7 +359,7 @@ window.renderAchievements = function() {
     const tierData   = ACH_TIERS[ach.tier];
     return `
       <div class="ach-card tier-${ach.tier} ${isUnlocked ? 'unlocked' : 'locked'}">
-        ${!isUnlocked ? '<div class="ach-lock-icon">🔒</div>' : ''}
+        <div class="ach-lock-icon">${isUnlocked ? '' : '🔒'}</div>
         <div class="ach-card-icon">${ach.icon}</div>
         <div class="ach-card-tier-badge">${tierData.label}</div>
         <div class="ach-card-name">${ach.name}</div>

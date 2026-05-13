@@ -1060,7 +1060,13 @@ const LIFESTYLE_QUESTS = {
     {name:'Organize Study Space',template:'Organize your study space for optimal focus and productivity.',stat:'Discipline',baseRP:15,baseStatGain:1,goals:['study_more','discipline']},
     {name:'Early Morning Study',template:'Wake up {time:1m} earlier than usual and study first thing.',stat:'Discipline',baseRP:30,baseStatGain:2,goals:['study_more','discipline']},
     {name:'No Social Media Study Day',template:'Study for {time:60m} with absolutely no social media or notifications.',stat:'Discipline',baseRP:30,baseStatGain:2,goals:['study_more','discipline']},
-    {name:'Coding Practice',template:'Write code or solve a programming challenge for {time:30m}.',stat:'Intelligence',baseRP:30,baseStatGain:2,goals:['study_more']},
+    {name:'Finance Fundamentals',template:'Spend {time:30m} learning one personal finance concept: budgeting, investing, compounding, or taxes. Document one key takeaway.',stat:'Intelligence',baseRP:30,baseStatGain:2,goals:['study_more']},
+    {name:'Budget Review',template:'Review your monthly budget. Identify one area to cut spending and one area to increase savings.',stat:'Wisdom',baseRP:28,baseStatGain:2,goals:['study_more']},
+    {name:'Investment Research',template:'Research one investment vehicle (stocks, ETFs, index funds, real estate) for {time:30m}. Write a one-paragraph summary.',stat:'Intelligence',baseRP:30,baseStatGain:2,goals:['study_more']},
+    {name:'Track Your Net Worth',template:'Calculate your current net worth (assets minus liabilities). Write it down and compare to last month.',stat:'Wisdom',baseRP:25,baseStatGain:2,goals:['study_more']},
+    {name:'Learn About Compounding',template:'Study how compound interest works for {time:20m}. Calculate how much you would have in 10 years if you saved a set amount monthly.',stat:'Intelligence',baseRP:25,baseStatGain:2,goals:['study_more']},
+    {name:'Explore Your Interest',template:'Spend {time:45m} deeply studying a topic you are genuinely curious about — no agenda, just growth.',stat:'Intelligence',baseRP:35,baseStatGain:3,goals:['study_more']},
+    {name:'Read on a Passion Topic',template:'Read {reps:20} pages or watch {time:30m} of content on something you personally find fascinating.',stat:'Wisdom',baseRP:28,baseStatGain:2,goals:['study_more']},
     {name:'Book Chapter',template:'Read {reps:30} pages of a book that improves your mind.',stat:'Wisdom',baseRP:28,baseStatGain:2,goals:['study_more']},
   ],
 
@@ -1086,7 +1092,9 @@ const LIFESTYLE_QUESTS = {
     {name:'Gratitude Journal',template:'Write 5 things you are grateful for and 3 goals for tomorrow.',stat:'Wisdom',baseRP:15,baseStatGain:1,goals:['discipline','mental_health']},
     {name:'One Hard Task First',template:'Identify your hardest task and complete it first today.',stat:'Discipline',baseRP:28,baseStatGain:2,goals:['discipline']},
     {name:'Night Routine',template:'Complete your full night routine and prepare for tomorrow.',stat:'Discipline',baseRP:18,baseStatGain:1,goals:['discipline']},
-    {name:'Budget Check',template:'Review your finances and track your spending for the day.',stat:'Wisdom',baseRP:18,baseStatGain:1,goals:['discipline']},
+    {name:'Budget Check',template:'Review your finances and track your spending for the day. Find one area to cut costs.',stat:'Wisdom',baseRP:22,baseStatGain:2,goals:['discipline']},
+    {name:'Emergency Fund Check',template:'Review your emergency fund status. If under 3 months expenses, research one step to grow it.',stat:'Wisdom',baseRP:22,baseStatGain:2,goals:['discipline']},
+    {name:'Expense Audit',template:'Review all your subscriptions and recurring expenses. Cancel or question at least one.',stat:'Discipline',baseRP:25,baseStatGain:2,goals:['discipline']},
     {name:'No Complaints',template:'Go the entire day without complaining about anything.',stat:'Discipline',baseRP:22,baseStatGain:2,goals:['discipline','mental_health']},
     {name:'Delayed Gratification',template:'Identify one thing you want immediately and delay it by at least 24 hours.',stat:'Discipline',baseRP:25,baseStatGain:2,goals:['discipline']},
     {name:'Commitment Kept',template:'Make one promise today and keep it — to yourself or someone else.',stat:'Discipline',baseRP:20,baseStatGain:2,goals:['discipline']},
@@ -1154,6 +1162,21 @@ const LIFESTYLE_QUESTS = {
     {name:'Unplug Hour',template:'Spend one hour completely off all devices — just be present.',stat:'Wisdom',baseRP:25,baseStatGain:2,goals:['mental_health']},
     {name:'Process Your Emotions',template:'Spend {time:10m} identifying and writing about how you feel today.',stat:'Wisdom',baseRP:18,baseStatGain:1,goals:['mental_health']},
     {name:'Positive Social Media',template:'Unfollow 5 accounts that make you feel negative about yourself.',stat:'Wisdom',baseRP:18,baseStatGain:1,goals:['mental_health']},
+  ],
+
+  finance: [
+    {name:'Budget Review',template:'Review your monthly budget. Track every expense category and find one area to cut back on.',stat:'Wisdom',baseRP:25,baseStatGain:2,goals:['discipline']},
+    {name:'Learn to Invest',template:'Spend {time:30m} researching index funds, ETFs, or compound interest. Write down one insight.',stat:'Intelligence',baseRP:28,baseStatGain:2,goals:['study_more']},
+    {name:'Track Net Worth',template:'Calculate your total assets minus your total liabilities today. Write the number down.',stat:'Wisdom',baseRP:22,baseStatGain:2,goals:['discipline']},
+    {name:'Savings Goal',template:'Set or review one financial savings goal. Write the target amount and a deadline.',stat:'Discipline',baseRP:20,baseStatGain:2,goals:['discipline']},
+    {name:'Expense Audit',template:'Review all recurring subscriptions and expenses. Cancel or question at least one unnecessary cost.',stat:'Discipline',baseRP:25,baseStatGain:2,goals:['discipline']},
+    {name:'Compound Interest',template:'Use an online calculator to project how much a daily saving of even a small amount grows in 10, 20, and 30 years.',stat:'Intelligence',baseRP:22,baseStatGain:2,goals:['study_more']},
+    {name:'Emergency Fund Check',template:'Check the status of your emergency fund. Research one step to build it to 3-6 months of expenses.',stat:'Wisdom',baseRP:22,baseStatGain:2,goals:['discipline']},
+    {name:'No Spend Day',template:'Go the entire day without spending money on anything non-essential.',stat:'Discipline',baseRP:28,baseStatGain:3,goals:['discipline']},
+    {name:'Learn About Taxes',template:'Spend {time:20m} reading about how income tax, deductions, or tax-advantaged accounts work in your country.',stat:'Intelligence',baseRP:25,baseStatGain:2,goals:['study_more']},
+    {name:'Financial Book',template:'Read {reps:20} pages of a personal finance book — The Psychology of Money, Rich Dad Poor Dad, or similar.',stat:'Wisdom',baseRP:25,baseStatGain:2,goals:['study_more']},
+    {name:'Income Review',template:'Review your income sources today. Write down at least one potential way to increase your income.',stat:'Intelligence',baseRP:22,baseStatGain:2,goals:['discipline']},
+    {name:'Debt Strategy',template:'If you have any debts, write out a clear payoff plan using either the avalanche or snowball method.',stat:'Discipline',baseRP:28,baseStatGain:2,goals:['discipline']},
   ],
 
   fitness_cardio: [
@@ -1245,6 +1268,7 @@ function pickLifestyleQuests(goals, fitnessLevel, rankName, count, usedNames) {
     social: goals.includes('be_social') ? 3 : 1,
     appearance: goals.includes('appearance') ? 3 : 1,
     study: goals.includes('study_more') ? 3 : 1,
+    finance: 2, // always included — finance knowledge is universal
     fitness_cardio: (goals.includes('lose_weight') || goals.includes('build_muscle')) ? 2 : 1,
   };
 
@@ -1436,9 +1460,12 @@ function generateQuestsLocally(hunter, rankName) {
   // Cap to 11 daily quests (8 workout + 3 lifestyle)
   const dailyQuests = quests.slice(0, 11).map((q, i) => ({...q, id: `d${i}_${Date.now()}`, type: 'daily'}));
 
-  // 1 special quest (harder)
+  // Primary muscle for today's special/challenge quests
+  const primaryMuscle = (todayMuscles && todayMuscles[0]) || 'fullbody';
+
+  // 1 special quest (harder) — always from today's primary muscle
   const specialPool = pickQuestsForMuscle(
-    (todayMuscles && todayMuscles[0]) || 'fullbody',
+    primaryMuscle,
     fitnessLevel, rankName, workoutEnv, 3,
     usedNames.concat(dailyQuests.map(q=>q.name))
   );
@@ -1452,7 +1479,7 @@ function generateQuestsLocally(hunter, rankName) {
     dailyQuests.push(special);
   }
 
-  // 2 bonus quests
+  // 2 bonus quests — lifestyle only
   const bonusPool = pickLifestyleQuests(
     goals, fitnessLevel, rankName, 4,
     usedNames.concat(dailyQuests.map(q=>q.name))
@@ -1468,11 +1495,11 @@ function generateQuestsLocally(hunter, rankName) {
     });
   });
 
-  // Challenge quest every other day
+  // Challenge quest every other day — from today's primary muscle
   const dayNum = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
   if (dayNum % 2 === 0) {
     const challengePool = pickQuestsForMuscle(
-      (todayMuscles && todayMuscles[0]) || 'fullbody',
+      primaryMuscle,
       'advanced', rankName, workoutEnv, 1,
       usedNames.concat(dailyQuests.map(q=>q.name))
     );

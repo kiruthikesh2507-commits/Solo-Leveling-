@@ -216,6 +216,7 @@ function showApp() {
   renderShop();
   renderStats();
   renderRankTable();
+  syncThemeSwitch();
   // Feature: check achievements on load
   if (typeof checkAchievements === 'function') setTimeout(checkAchievements, 200);
   if (typeof renderAchievements === 'function') setTimeout(renderAchievements, 300);
@@ -573,11 +574,25 @@ window.toggleTheme = function() {
   STATE.theme = STATE.theme === 'dark' ? 'light' : 'dark';
   applyTheme(STATE.theme);
   saveState();
-  document.querySelectorAll('.icon-btn').forEach(b => {
-    if (b.textContent.trim() === '☀' || b.textContent.trim() === '🌙') b.textContent = STATE.theme === 'dark' ? '☀' : '🌙';
-  });
+  syncThemeSwitch();
   showToast(STATE.theme === 'dark' ? 'DARK MODE ACTIVATED' : 'LIGHT MODE ACTIVATED');
 };
+
+function syncThemeSwitch() {
+  const sw = document.getElementById('themeSwitchBtn');
+  const darkLbl = document.getElementById('themeLabelDark');
+  const lightLbl = document.getElementById('themeLabelLight');
+  if (!sw) return;
+  if (STATE.theme === 'light') {
+    sw.classList.add('light-active');
+    if (darkLbl) darkLbl.classList.remove('active');
+    if (lightLbl) lightLbl.classList.add('active');
+  } else {
+    sw.classList.remove('light-active');
+    if (darkLbl) darkLbl.classList.add('active');
+    if (lightLbl) lightLbl.classList.remove('active');
+  }
+}
 
 // ─── TAB SYSTEM ───────────────────────────────────────────────────────────────
 
@@ -873,12 +888,13 @@ function drawStatChart() {
   const canvas = document.getElementById('statChart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
-  const type = STATE.statChartType || 'radar';
+  const type = (STATE.statChartType === 'pie') ? 'radar' : (STATE.statChartType || 'radar');
   const stats = STATS_LIST.map(s => ({ name: s, val: STATE.stats[s] || 5, color: STAT_COLORS[s], icon: STAT_ICONS[s] }));
   const isDark = STATE.theme !== 'light';
   const textColor = isDark ? '#ccc' : '#333';
-  const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-  const accentColor = '#dc1428';
+  const gridColor = isDark ? 'rgba(220,20,40,0.15)' : 'rgba(180,10,30,0.12)';
+  const accentColor = isDark ? '#dc1428' : '#c0101e';
+  const accentFill = isDark ? 'rgba(220,20,40,0.25)' : 'rgba(192,16,30,0.15)';
 
   // Fix blur on high-DPI / retina screens
   const dpr = window.devicePixelRatio || 1;
@@ -892,15 +908,13 @@ function drawStatChart() {
 
   ctx.clearRect(0, 0, cssW, cssH);
 
-  // Pass a virtual canvas-like object with CSS dimensions for drawing functions
   const vCanvas = { width: cssW, height: cssH };
 
-  if (type === 'radar') drawRadarChart(ctx, vCanvas, stats, textColor, gridColor, accentColor, isDark);
-  else if (type === 'bar') drawBarChart(ctx, vCanvas, stats, textColor, gridColor, isDark);
-  else if (type === 'pie') drawPieChart(ctx, vCanvas, stats, textColor, isDark);
+  if (type === 'radar') drawRadarChart(ctx, vCanvas, stats, textColor, gridColor, accentColor, accentFill, isDark);
+  else drawBarChart(ctx, vCanvas, stats, textColor, gridColor, accentColor, isDark);
 }
 
-function drawRadarChart(ctx, canvas, stats, textColor, gridColor, accentColor, isDark) {
+function drawRadarChart(ctx, canvas, stats, textColor, gridColor, accentColor, accentFill, isDark) {
   const W = canvas.width, H = canvas.height;
   const cx = W / 2, cy = H / 2 - 10;
   const R = Math.min(W, H) * 0.32;
@@ -943,7 +957,7 @@ function drawRadarChart(ctx, canvas, stats, textColor, gridColor, accentColor, i
     i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
   }
   ctx.closePath();
-  ctx.fillStyle = isDark ? 'rgba(220,20,40,0.25)' : 'rgba(220,20,40,0.15)';
+  ctx.fillStyle = accentFill;
   ctx.fill();
   ctx.strokeStyle = accentColor;
   ctx.lineWidth = 2;
@@ -958,7 +972,7 @@ function drawRadarChart(ctx, canvas, stats, textColor, gridColor, accentColor, i
 
     ctx.beginPath();
     ctx.arc(px, py, 3.5, 0, Math.PI * 2);
-    ctx.fillStyle = stats[i].color;
+    ctx.fillStyle = accentColor;
     ctx.fill();
 
     // Label
@@ -971,14 +985,14 @@ function drawRadarChart(ctx, canvas, stats, textColor, gridColor, accentColor, i
     ctx.fillText(stats[i].icon + ' ' + stats[i].val, lx, ly);
   }
 
-  // Stat name legend at bottom
+  // Chart label at bottom
   ctx.font = '8px Rajdhani, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillStyle = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+  ctx.fillStyle = isDark ? 'rgba(220,20,40,0.5)' : 'rgba(180,10,30,0.5)';
   ctx.fillText('[ STAT RADAR ]', cx, H - 8);
 }
 
-function drawBarChart(ctx, canvas, stats, textColor, gridColor, isDark) {
+function drawBarChart(ctx, canvas, stats, textColor, gridColor, accentColor, isDark) {
   const W = canvas.width, H = canvas.height;
   const padL = 30, padR = 10, padT = 14, padB = 60;
   const chartW = W - padL - padR;
@@ -1008,10 +1022,10 @@ function drawBarChart(ctx, canvas, stats, textColor, gridColor, isDark) {
     const y = padT + chartH - barH;
     const bw = barW * 0.7;
 
-    // Gradient bar
+    // Gradient bar — accent themed
     const grad = ctx.createLinearGradient(x, y + barH, x, y);
-    grad.addColorStop(0, s.color + '44');
-    grad.addColorStop(1, s.color);
+    grad.addColorStop(0, accentColor + '44');
+    grad.addColorStop(1, accentColor);
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.roundRect ? ctx.roundRect(x, y, bw, barH, [3, 3, 0, 0]) : ctx.rect(x, y, bw, barH);
@@ -1019,7 +1033,7 @@ function drawBarChart(ctx, canvas, stats, textColor, gridColor, isDark) {
 
     // Value label above bar
     ctx.font = 'bold 9px Rajdhani, sans-serif';
-    ctx.fillStyle = s.color;
+    ctx.fillStyle = accentColor;
     ctx.textAlign = 'center';
     ctx.fillText(s.val, x + bw / 2, y - 4);
 
@@ -1376,9 +1390,10 @@ window.showSettings = function() {
     if (sl) sl.value = STATE.hunter.sleep || '23:00';
     if (fi) fi.value = STATE.hunter.fitness || 'beginner';
   }
-  // Sync chart type dropdown with current saved preference
+  // Sync chart type dropdown with current saved preference (no pie)
   const ct = document.getElementById('setting-charttype');
-  if (ct) ct.value = STATE.statChartType || 'radar';
+  if (ct) ct.value = (STATE.statChartType === 'pie' ? 'radar' : STATE.statChartType) || 'radar';
+  syncThemeSwitch();
   document.getElementById('settingsPanel').classList.add('open');
   document.getElementById('settingsOverlay').classList.add('open');
 };

@@ -574,7 +574,13 @@
   <div class="settings-body">
     <div class="setting-item">
       <span>Theme</span>
-      <button class="btn-ghost small" onclick="toggleTheme()">Toggle</button>
+      <div class="theme-switch-wrap">
+        <span class="theme-switch-label" id="themeLabelDark">🌙 DARK</span>
+        <div class="theme-switch" id="themeSwitchBtn" onclick="toggleTheme()">
+          <div class="theme-switch-knob" id="themeSwitchKnob">☀</div>
+        </div>
+        <span class="theme-switch-label" id="themeLabelLight">☀ LIGHT</span>
+      </div>
     </div>
     <div class="setting-item">
       <span>Hunter Name</span>
@@ -608,7 +614,6 @@
       <select id="setting-charttype" class="setting-input setting-select" onchange="setStatChart(this.value)">
         <option value="radar">Radar (Spider Web)</option>
         <option value="bar">Bar Chart</option>
-        <option value="pie">Pie / Donut</option>
       </select>
     </div>
 
