@@ -316,6 +316,9 @@ function _showNextAchUnlock() {
     glow.style.background = `radial-gradient(circle, ${c}44 0%, transparent 70%)`;
   }
 
+  // SFX + animation
+  if (typeof onBadgeUnlocked === 'function') onBadgeUnlocked(ach.name, ach.icon, ach.tier);
+
   showModal('modalAchievement');
 
   // After this modal closes, show next if any

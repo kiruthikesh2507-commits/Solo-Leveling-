@@ -217,6 +217,12 @@ function showApp() {
   renderStats();
   renderRankTable();
   syncThemeSwitch();
+  // Init rank tracker for rank-up detection
+  if (typeof onRankChanged === 'function') _prevRankName = getCurrentRank().name;
+  // Boot SFX + welcome animation
+  if (typeof onAwakenAppReady === 'function' && STATE.hunter) {
+    setTimeout(() => onAwakenAppReady(STATE.hunter.name), 300);
+  }
   // Feature: check achievements on load
   if (typeof checkAchievements === 'function') setTimeout(checkAchievements, 200);
   if (typeof renderAchievements === 'function') setTimeout(renderAchievements, 300);
@@ -604,10 +610,10 @@ window.switchTab = function(tab) {
   const nb = document.querySelector(`.nav-btn[data-tab="${tab}"]`);
   if (tc) tc.classList.add('active');
   if (nb) nb.classList.add('active');
-  if (tab === 'stats')        { renderStats(); renderRankTable(); }
+  if (tab === 'stats')        { renderStats(); renderRankTable(); if (typeof onStatsOpened === 'function') onStatsOpened(); }
   if (tab === 'shop')         { renderShop(); }
   if (tab === 'inventory')    { renderInventory(); }
-  if (tab === 'quests')       { renderQuests(); }
+  if (tab === 'quests')       { renderQuests(); if (typeof onQuestsRendered === 'function') setTimeout(onQuestsRendered, 80); }
   if (tab === 'achievements') {
     if (typeof renderAchievements === 'function') renderAchievements();
     else setTimeout(() => { if (typeof renderAchievements === 'function') renderAchievements(); }, 100);
@@ -636,7 +642,9 @@ window.generateDailyQuests = function() {
   syncUI();
   renderQuests();
   switchTab('quests');
+  if (typeof onQuestsRendered === 'function') setTimeout(onQuestsRendered, 120);
   showToast('MISSIONS ASSIGNED. BEGIN YOUR HUNT.', 'success');
+  if (typeof SFX !== 'undefined') SFX.dailyLogin();
 };
 
 // ─── QUEST COMPLETION ─────────────────────────────────────────────────────────
@@ -667,6 +675,14 @@ window.completeQuest = function(questId) {
   }
 
   saveState(); syncUI(); renderQuests();
+  // SFX + animation
+  if (typeof onQuestCompleted === 'function') {
+    const btn = document.querySelector(`.btn-complete[onclick="completeQuest('${questId}')"]`);
+    onQuestCompleted(btn);
+  }
+  // Rank-up detection
+  const newRank = getCurrentRank().name;
+  if (typeof onRankChanged === 'function') onRankChanged(newRank);
   showQuestCompleteModal(quest, rpGain, statGain, bonusChest);
 };
 
@@ -691,6 +707,7 @@ window.openChest = function(chestId) {
   }
 
   saveState(); syncUI();
+  if (typeof onChestOpened === 'function') onChestOpened();
   showChestModal(r);
 };
 
@@ -718,6 +735,7 @@ window.purchaseItem = function(itemId) {
   STATE.rp -= item.cost;
   addToInventory(itemId, 1);
   saveState(); syncUI(); renderShop(); renderInventory();
+  if (typeof onPurchase === 'function') onPurchase();
   showToast(`${item.name} ACQUIRED`, 'gold');
 };
 
@@ -1341,6 +1359,7 @@ function checkPenalty() {
     STATS_LIST.forEach(s => { STATE.stats[s] = Math.max(1, (STATE.stats[s] || 5) - 2); });
     STATE.penaltyDays = 0;
     saveState();
+    if (typeof onPenalty === 'function') onPenalty();
     showPenaltyModal(rpLoss);
   }
 }
