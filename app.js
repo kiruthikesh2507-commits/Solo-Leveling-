@@ -211,8 +211,7 @@ function showScreen(name) {
 function showApp() {
   showScreen('app');
   syncUI();
-  checkDailyReset();
-  checkPenalty();
+  checkDailyReset(); // already calls checkPenalty internally
   renderShop();
   renderStats();
   renderRankTable();
@@ -625,6 +624,14 @@ window.switchTab = function(tab) {
 window.generateDailyQuests = function() {
   const today = getTodayStr();
   if (STATE.lastQuestDate === today && STATE.quests.length > 0) {
+    // Check if all non-skipped quests are done — if so, day is fully complete
+    const nonSkipped = STATE.quests.filter(q => !q.skipped);
+    const allDone = nonSkipped.length > 0 && nonSkipped.every(q => q.completed);
+    if (allDone) {
+      showToast('ALL MISSIONS COMPLETE — RETURN TOMORROW, HUNTER', 'success');
+      switchTab('quests');
+      return;
+    }
     showToast('QUESTS ALREADY ASSIGNED FOR TODAY', 'error');
     switchTab('quests');
     return;
@@ -784,7 +791,12 @@ window.useItem = function(itemId) {
     case 'hard_work':     STATE.activeEffects.doubleRewards = true; showToast('HARD WORK MODE: 2X REWARDS'); break;
     case 'task_booster':  STATE.activeEffects.taskBooster = true; showToast('TASK BOOSTER READY'); break;
     case 'bonus_chest_key': STATE.activeEffects.guaranteeChest = true; showToast('NEXT QUEST GUARANTEES A CHEST', 'gold'); break;
-    case 'refresh_quests': STATE.quests = []; STATE.lastQuestDate = null; window.generateDailyQuests(); break;
+    case 'refresh_quests': {
+      const nonSkipped = STATE.quests.filter(q => !q.skipped);
+      const allDone = nonSkipped.length > 0 && nonSkipped.every(q => q.completed);
+      if (allDone) { showToast('ALL MISSIONS COMPLETE — CANNOT REFRESH', 'error'); return; }
+      STATE.quests = []; STATE.lastQuestDate = null; window.generateDailyQuests(); break;
+    }
     case 'swap_quest':    swapRandomQuest(); break;
     case 'auto_complete': autoCompleteOneQuest(); break;
     default: showToast(shopItem.name + ' ACTIVATED'); break;
@@ -1163,11 +1175,6 @@ function renderQuests() {
   const now = new Date();
   const el = document.getElementById('questDate');
   if (el) el.textContent = now.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' }).toUpperCase();
-
-  // Show today's muscle group
-  const todayMuscles = STATE.hunter ? getMusclesForToday(STATE.hunter) : null;
-  const muscleStr = todayMuscles ? todayMuscles.map(m => MUSCLE_LABELS[m] || m).join(' + ') : 'Rest Day';
-  showToast('TODAY: ' + muscleStr);
 }
 
 function questCard(q) {
@@ -1197,10 +1204,11 @@ function questCard(q) {
     </div>`;
 }
 
-window.filterQuests = function(f) {
+window.filterQuests = function(f, e) {
   STATE.activeFilter = f;
   document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  event.target.classList.add('active');
+  const btn = (e && e.target) || document.querySelector(`.filter-btn[onclick*="'${f}'"]`);
+  if (btn) btn.classList.add('active');
   renderQuests();
 };
 
@@ -1304,11 +1312,27 @@ function syncUI() {
   const today = getTodayStr();
   const genBtn = document.getElementById('btnGenerate');
   if (STATE.lastQuestDate === today && STATE.quests.length > 0) {
-    genBtn.querySelector('.btn-gen-text').textContent = 'MISSIONS ASSIGNED TODAY';
-    genBtn.querySelector('.btn-gen-sub').textContent = 'Go to QUESTS tab to view missions';
+    const nonSkipped = STATE.quests.filter(q => !q.skipped);
+    const allDone = nonSkipped.length > 0 && nonSkipped.every(q => q.completed);
+    if (allDone) {
+      genBtn.querySelector('.btn-gen-text').textContent = '✓ ALL MISSIONS COMPLETE';
+      genBtn.querySelector('.btn-gen-sub').textContent = 'Outstanding work, Hunter. Return tomorrow.';
+      genBtn.disabled = true;
+      genBtn.style.opacity = '0.6';
+      genBtn.style.cursor = 'not-allowed';
+    } else {
+      genBtn.querySelector('.btn-gen-text').textContent = 'MISSIONS ASSIGNED TODAY';
+      genBtn.querySelector('.btn-gen-sub').textContent = 'Go to QUESTS tab to view missions';
+      genBtn.disabled = false;
+      genBtn.style.opacity = '';
+      genBtn.style.cursor = '';
+    }
   } else {
     genBtn.querySelector('.btn-gen-text').textContent = "GENERATE TODAY'S QUESTS";
     genBtn.querySelector('.btn-gen-sub').textContent = 'Instant mission assignment — no API needed';
+    genBtn.disabled = false;
+    genBtn.style.opacity = '';
+    genBtn.style.cursor = '';
   }
 
   // Show today's training info on dashboard
@@ -1330,17 +1354,20 @@ function syncUI() {
 function checkDailyReset() {
   const today = getTodayStr();
   if (STATE.lastQuestDate && STATE.lastQuestDate !== today) {
-    const completedYesterday = STATE.quests.filter(q => q.completed && !q.skipped).length > 0;
-    if (completedYesterday) {
+    // Require ALL non-skipped quests completed to count as a streak day
+    const nonSkipped = STATE.quests.filter(q => !q.skipped);
+    const allDone = nonSkipped.length > 0 && nonSkipped.every(q => q.completed);
+    if (allDone) {
       STATE.streak++;
       STATE.penaltyDays = 0;
       if (!STATE.hunter.noSkipStreak) STATE.hunter.noSkipStreak = 0;
-      const allDone = STATE.quests.filter(q => !q.skipped).every(q => q.completed);
-      if (allDone) STATE.hunter.noSkipStreak++;
+      // noSkipStreak: only if none were skipped at all
+      const anySkipped = STATE.quests.some(q => q.skipped);
+      if (!anySkipped) STATE.hunter.noSkipStreak++;
       else STATE.hunter.noSkipStreak = 0;
     } else {
       STATE.streak = 0;
-      STATE.penaltyDays++;
+      STATE.penaltyDays = (STATE.penaltyDays || 0) + 1;
       if (STATE.hunter) STATE.hunter.noSkipStreak = 0;
     }
     STATE.rpTodayEarned = 0;
@@ -1455,10 +1482,16 @@ window.importData = function(event) {
       const imported = JSON.parse(e.target.result);
       if (!imported.hunter) { showToast('INVALID BACKUP FILE', 'error'); return; }
       if (!confirm('Import this backup? Current progress will be replaced.')) return;
-      STATE = { ...STATE, ...imported };
+      // Full replace, then patch missing fields so app never crashes on old saves
+      Object.assign(STATE, imported);
+      if (!STATE.inventory)    STATE.inventory = [];
+      if (!STATE.bonusChests)  STATE.bonusChests = [];
+      if (!STATE.activeEffects) STATE.activeEffects = {};
+      if (!STATE.unlockedAchievements) STATE.unlockedAchievements = {};
       saveState();
       syncUI();
       renderShop();
+      renderInventory();
       renderStats();
       renderRankTable();
       if (typeof renderAchievements === 'function') renderAchievements();

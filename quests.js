@@ -1458,7 +1458,8 @@ function generateQuestsLocally(hunter, rankName) {
   }
 
   // Cap to 11 daily quests (8 workout + 3 lifestyle)
-  const dailyQuests = quests.slice(0, 11).map((q, i) => ({...q, id: `d${i}_${Date.now()}`, type: 'daily'}));
+  const ts = Date.now();
+  const dailyQuests = quests.slice(0, 11).map((q, i) => ({...q, id: `d${i}_${ts + i}`, type: 'daily'}));
 
   // Primary muscle for today's special/challenge quests
   const primaryMuscle = (todayMuscles && todayMuscles[0]) || 'fullbody';
@@ -1471,7 +1472,7 @@ function generateQuestsLocally(hunter, rankName) {
   );
   if (specialPool.length > 0) {
     const special = {...specialPool[0]};
-    special.id = `s0_${Date.now()}`;
+    special.id = `s0_${ts + 100}`;
     special.type = 'special';
     special.rp = Math.round(special.rp * 2.5);
     special.statGain = Math.max(3, special.statGain * 2);
@@ -1487,7 +1488,7 @@ function generateQuestsLocally(hunter, rankName) {
   bonusPool.slice(0, 2).forEach((q, i) => {
     dailyQuests.push({
       ...q,
-      id: `b${i}_${Date.now()}`,
+      id: `b${i}_${ts + 200 + i}`,
       type: 'bonus',
       rp: Math.round(q.rp * 1.5),
       statGain: Math.max(2, q.statGain + 1),
@@ -1505,7 +1506,7 @@ function generateQuestsLocally(hunter, rankName) {
     );
     if (challengePool.length > 0) {
       const challenge = {...challengePool[0]};
-      challenge.id = `c0_${Date.now()}`;
+      challenge.id = `c0_${ts + 300}`;
       challenge.type = 'challenging';
       challenge.rp = Math.round(challenge.rp * 4);
       challenge.statGain = Math.max(8, challenge.statGain * 4);

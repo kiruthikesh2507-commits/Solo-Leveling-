@@ -519,6 +519,8 @@ window.acceptDungeonQuest = function() {
   document.getElementById('dungeonGateOverlay').classList.remove('active');
 
   if (!_currentDungeonQuest) return;
+  const quest = _currentDungeonQuest;
+  _currentDungeonQuest = null; // prevent double-firing
 
   // Track stat
   if (!STATE.hunter.dungeonsAccepted) STATE.hunter.dungeonsAccepted = 0;
@@ -527,13 +529,13 @@ window.acceptDungeonQuest = function() {
   // Add dungeon quest to today's quest list
   const dungeonQ = {
     id:          'dungeon_' + Date.now(),
-    name:        '⬡ ' + _currentDungeonQuest.name,
-    description: _currentDungeonQuest.desc,
+    name:        '⬡ ' + quest.name,
+    description: quest.desc,
     type:        'dungeon',
-    stat:        _currentDungeonQuest.stat,
-    statGain:    _currentDungeonQuest.statGain,
-    rp:          _currentDungeonQuest.rp,
-    muscle:      _currentDungeonQuest.muscle,
+    stat:        quest.stat,
+    statGain:    quest.statGain,
+    rp:          quest.rp,
+    muscle:      quest.muscle,
     completed:   false,
   };
   STATE.quests.push(dungeonQ);
@@ -543,7 +545,6 @@ window.acceptDungeonQuest = function() {
   if (typeof renderQuests === 'function') renderQuests();
   if (typeof checkAchievements === 'function') checkAchievements();
 
-  // Switch to quests tab to see it
   if (typeof switchTab === 'function') switchTab('quests');
 
   showDungeonToast('⚔ DUNGEON QUEST ADDED — COMPLETE IT, HUNTER');
@@ -554,9 +555,11 @@ window.declineDungeonQuest = function() {
   document.getElementById('dungeonGateOverlay').classList.remove('active');
 
   if (!_currentDungeonQuest) return;
+  const quest = _currentDungeonQuest;
+  _currentDungeonQuest = null; // prevent double-firing if called twice
 
   // Hard penalty: lose RP + stats
-  const rpLoss   = Math.floor((_currentDungeonQuest.rp || 300) * 0.5);
+  const rpLoss   = Math.floor((quest.rp || 300) * 0.5);
   const statLoss = 3;
 
   STATE.rp = Math.max(0, (STATE.rp || 0) - rpLoss);
@@ -573,10 +576,8 @@ window.declineDungeonQuest = function() {
   if (typeof syncUI === 'function') syncUI();
   if (typeof checkAchievements === 'function') checkAchievements();
 
-  // Show punishment modal-style toast
   showDungeonToast(`✕ COWARD'S PUNISHMENT — LOST ${rpLoss} RP & STATS`);
 
-  // Show the penalty modal after a moment
   setTimeout(() => {
     if (typeof showPenaltyModalCustom === 'function') {
       showPenaltyModalCustom(rpLoss, statLoss);
@@ -620,8 +621,10 @@ window.addEventListener('load', () => {
         // Track quest counts
         if (!STATE.hunter.questsEverCompleted) STATE.hunter.questsEverCompleted = 0;
         STATE.hunter.questsEverCompleted++;
+
+        // Track RP earned BEFORE origComplete runs (quest.rp is unchanged at this point)
         if (!STATE.hunter.rpEverEarned) STATE.hunter.rpEverEarned = 0;
-        if (!STATE.hunter.chestsOpened) STATE.hunter.chestsOpened = 0;
+        STATE.hunter.rpEverEarned += (quest.rp || 0);
 
         // Type tracking
         if (quest.type === 'special')    { if (!STATE.hunter.specialQuestsDone) STATE.hunter.specialQuestsDone = 0; STATE.hunter.specialQuestsDone++; }
@@ -649,12 +652,6 @@ window.addEventListener('load', () => {
       }
 
       origComplete(questId);
-
-      // Track RP earned
-      if (quest && !quest.completed) {
-        if (!STATE.hunter.rpEverEarned) STATE.hunter.rpEverEarned = 0;
-        STATE.hunter.rpEverEarned += (quest.rp || 0);
-      }
 
       checkAchievements();
     };
