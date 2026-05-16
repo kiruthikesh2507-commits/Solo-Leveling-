@@ -155,6 +155,7 @@ let STATE = {
   bonusChests: [],
   penaltyDays: 0,
   theme: 'dark',
+  questCount: 8,
   activeFilter: 'all',
   activeTab: 'dashboard',
 };
@@ -1439,6 +1440,13 @@ window.showSettings = function() {
   // Sync chart type dropdown with current saved preference (no pie)
   const ct = document.getElementById('setting-charttype');
   if (ct) ct.value = (STATE.statChartType === 'pie' ? 'radar' : STATE.statChartType) || 'radar';
+  // Sync quest count slider
+  const qc = document.getElementById('setting-questcount');
+  const qcVal = document.getElementById('setting-questcount-val');
+  if (qc) {
+    qc.value = STATE.questCount || 8;
+    if (qcVal) qcVal.textContent = STATE.questCount || 8;
+  }
   syncThemeSwitch();
   document.getElementById('settingsPanel').classList.add('open');
   document.getElementById('settingsOverlay').classList.add('open');
@@ -1453,11 +1461,18 @@ window.saveProfileSettings = function() {
   const wu = document.getElementById('setting-wakeup');
   const sl = document.getElementById('setting-sleep');
   const fi = document.getElementById('setting-fitness');
+  const qc = document.getElementById('setting-questcount');
   if (wu && wu.value) STATE.hunter.wakeup = wu.value;
   if (sl && sl.value) STATE.hunter.sleep = sl.value;
   if (fi && fi.value) STATE.hunter.fitness = fi.value;
+  if (qc && qc.value) STATE.questCount = parseInt(qc.value);
   saveState();
   showToast('PROFILE UPDATED', 'success');
+};
+
+window.updateQuestCountDisplay = function(value) {
+  const val = document.getElementById('setting-questcount-val');
+  if (val) val.textContent = value;
 };
 
 window.exportData = function() {
